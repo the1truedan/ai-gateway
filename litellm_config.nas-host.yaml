@@ -1,0 +1,71 @@
+# Generated public surface for the central M.A.N.A.G.E.R. gateway.
+# Raw upstream identifiers are private deployment metadata; clients may call only
+# the manager-* names below. Cloud names are explicit egress consent signals.
+model_list:
+  - model_name: manager-worker-nas-host-code
+    litellm_params: {model: ollama_chat/qwen2.5-coder:3b, api_base: os.environ/NAS_HOST_OLLAMA_API_BASE}
+  - model_name: manager-worker-nas-host-vision
+    litellm_params: {model: ollama_chat/qwen3-vl:2b, api_base: os.environ/NAS_HOST_OLLAMA_API_BASE}
+  - model_name: manager-auto
+    litellm_params: &orchestrator
+      model: openai/manager-auto
+      api_base: os.environ/ORCHESTRATOR_API_BASE
+      api_key: os.environ/ORCHESTRATOR_API_KEY
+  - model_name: manager-plan
+    litellm_params: {model: openai/manager-plan, api_base: os.environ/ORCHESTRATOR_API_BASE, api_key: os.environ/ORCHESTRATOR_API_KEY}
+  - model_name: manager-code
+    litellm_params: {model: openai/manager-code, api_base: os.environ/ORCHESTRATOR_API_BASE, api_key: os.environ/ORCHESTRATOR_API_KEY}
+  - model_name: manager-review
+    litellm_params: {model: openai/manager-review, api_base: os.environ/ORCHESTRATOR_API_BASE, api_key: os.environ/ORCHESTRATOR_API_KEY}
+  - model_name: manager-reason
+    litellm_params: {model: openai/manager-reason, api_base: os.environ/ORCHESTRATOR_API_BASE, api_key: os.environ/ORCHESTRATOR_API_KEY}
+  - model_name: manager-research
+    litellm_params: {model: openai/manager-research, api_base: os.environ/ORCHESTRATOR_API_BASE, api_key: os.environ/ORCHESTRATOR_API_KEY}
+  - model_name: manager-vision
+    litellm_params: {model: openai/manager-vision, api_base: os.environ/ORCHESTRATOR_API_BASE, api_key: os.environ/ORCHESTRATOR_API_KEY}
+  - model_name: manager-embed
+    litellm_params:
+      model: openai/nomic-embed-text-v2-moe:latest
+      api_base: os.environ/GPU_HOST_OLLAMA_OPENAI_BASE
+      api_key: local
+  - model_name: manager-phi-local
+    litellm_params: {model: openai/manager-phi-local, api_base: os.environ/ORCHESTRATOR_API_BASE, api_key: os.environ/ORCHESTRATOR_API_KEY}
+  - model_name: manager-openrouter-free
+    litellm_params: {model: openrouter/openrouter/free, api_key: os.environ/OPENROUTER_API_KEY}
+  - model_name: manager-grok-paid
+    litellm_params: {model: os.environ/XAI_PAID_MODEL, api_key: os.environ/XAI_API_KEY}
+  # Only register paid aliases when GEMINI_* (etc.) are set in nas-host env.
+  # Empty os.environ/MODEL values make LiteLLM fail startup (None model name).
+  # Add manager-codex-paid / manager-mimo-paid / manager-hf-paid only after those
+  # env vars are populated on nas-host — do not leave blank model: os.environ/* rows.
+  - model_name: manager-gemini-paid
+    litellm_params:
+      model: os.environ/GEMINI_PAID_MODEL
+      api_key: os.environ/GEMINI_API_KEY
+  # manager-claude-paid / manager-codex-paid (added 2026-07-27): model is a
+  # hardcoded literal (not os.environ/*_PAID_MODEL) specifically so these rows
+  # never crash LiteLLM startup even before ANTHROPIC_API_KEY/OPENAI_API_KEY are
+  # populated on nas-host — only the api_key indirection is allowed to be blank.
+  - model_name: manager-claude-paid
+    litellm_params:
+      model: anthropic/claude-3-5-haiku-20241022
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: manager-codex-paid
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  callbacks: [prometheus]
+  drop_params: true
+  telemetry: false
+  store_prompts_in_spend_logs: false
+  maximum_spend_logs_retention_period: 90d
+router_settings:
+  num_retries: 1
+  # Consent classes never cross-fallback. Provider-specific aliases have no
+  # fallback until catalog validation supplies another deployment for that alias.
+  fallbacks: []
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL

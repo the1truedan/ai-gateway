@@ -1,0 +1,6 @@
+style_id: ama
+name: AMA biomedical citations
+domains: [clinical, biomedical]
+cite_processor: csl:american-medical-association
+accessibility_export: true
+decision_authority: prepare_only

@@ -1,0 +1,110 @@
+# Overlay for M4 Mac (arm64). Usage: scripts/docker/compose.sh up -d
+services:
+  litellm:
+    environment:
+      - OLLAMA_API_BASE=http://host.docker.internal:11434
+      - TURBOQUANT_ORCH_API_BASE=http://host.docker.internal:8081/v1
+      - TURBOQUANT_CODER_API_BASE=http://host.docker.internal:8082/v1
+      - VISION_EMBED_API_BASE=http://host.docker.internal:8791/v1
+      # LM Studio Developer Server (host :1234) — set LM_API_TOKEN in .env
+      - LMSTUDIO_API_BASE=${LMSTUDIO_API_BASE:-http://host.docker.internal:1234/v1}
+      - LM_API_TOKEN=${LM_API_TOKEN:-}
+      # Raw authenticated worker buses. Never point these at Headroom: doing so
+      # would create Headroom -> orchestrator -> LiteLLM -> Headroom loops.
+      - GPU_HOST_LITELLM_API_BASE=${GPU_HOST_LITELLM_API_BASE:-http://<gpu-host-ip>:4000/v1}
+      - NAS_HOST_LITELLM_API_BASE=${NAS_HOST_LITELLM_API_BASE:-http://<nas-host-ip>:4000/v1}
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml:ro
+      - shared-uv-cache:/shared/cache/uv
+      - shared-models:/shared/models:ro
+      - shared-code:/shared/code:ro
+
+  open-webui:
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+
+  headroom:
+    environment:
+      - OPENAI_TARGET_API_URL=${HEADROOM_OPENAI_TARGET:-http://orchestrator:8790/v1}
+      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
+      - ANTHROPIC_TARGET_API_URL=${HEADROOM_ANTHROPIC_TARGET:-http://orchestrator:8790}
+      - ANTHROPIC_API_KEY=${LITELLM_MASTER_KEY}
+      - HEADROOM_NO_SUBSCRIPTION_TRACKING=1
+    depends_on:
+      orchestrator:
+        condition: service_healthy
+
+  # Keep memory/search inference off the M4. These services speak directly to
+  # the gpu-host Ollama worker because they require Ollama chat/embedding APIs,
+  # not the orchestrator's chat-only placement path.
+  botmem-api:
+    environment:
+      OLLAMA_BASE_URL: ${BOTMEM_OLLAMA_BASE_URL:-http://<gpu-host-ip>:11434}
+
+  hister:
+    environment:
+      HISTER__SEMANTIC_SEARCH__EMBEDDING_ENDPOINT: ${HISTER_EMBEDDING_ENDPOINT:-http://<gpu-host-ip>:11434/v1/embeddings}
+
+  # The M4 is the sole control plane. Port 8790 is LAN-reachable for worker
+  # Headroom instances, but every request is bearer-authenticated.
+  orchestrator:
+    build:
+      context: .
+      dockerfile: services/orchestrator/Dockerfile
+    image: manager-orchestrator:local
+    container_name: manager-orchestrator
+    restart: unless-stopped
+    environment:
+      - ORCHESTRATOR_HOST=0.0.0.0
+      - ORCHESTRATOR_PORT=8790
+      - ORCHESTRATOR_API_KEY=${LITELLM_MASTER_KEY}
+      - ORCHESTRATOR_UPSTREAM_KEY=${LITELLM_MASTER_KEY}
+      - CAPACITY_AGENT_TOKEN=${LITELLM_MASTER_KEY}
+    ports:
+      - "8790:8790"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8790/healthz')\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      litellm:
+        condition: service_healthy
+    networks:
+      - ai-gateway
+
+  openwebui-importer:
+    platform: linux/arm64
+
+  aida:
+    volumes:
+      - shared-models:/shared/models:ro
+
+  vision-embed:
+    volumes:
+      - shared-models:/shared/models:ro
+
+volumes:
+  shared-uv-cache:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=${AI_NFS_ADDR:-<nas-host-ip>},rw,nfsvers=3
+      device: :/mnt/ai-data/uv-cache
+  shared-models:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=${AI_NFS_ADDR:-<nas-host-ip>},ro,nfsvers=3
+      device: :/mnt/ai-data/models
+  shared-code:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=${AI_NFS_ADDR:-<nas-host-ip>},ro,nfsvers=3
+      device: :/mnt/ai-data/codebase-mirror

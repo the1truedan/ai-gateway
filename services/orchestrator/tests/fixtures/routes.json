@@ -1,0 +1,15 @@
+{
+  "host_model_map": {
+    "gpu-host": {"manager-code": "manager-worker-gpu-host-code", "manager-reason": "manager-worker-gpu-host-reason"},
+    "mac-client": {"manager-code": "manager-worker-m4-code", "manager-reason": "manager-worker-m4-reason"},
+    "nas-host": {"manager-code": "manager-worker-nas-host-code", "manager-vision": "manager-worker-nas-host-vision"}
+  },
+  "hosts": {
+    "gpu-host": {"base_url": "http://localhost:18787/v1", "capacity_url": "http://localhost:18791/capacity"},
+    "mac-client": {"base_url": "http://localhost:28787/v1", "capacity_url": "http://localhost:28791/capacity"},
+    "nas-host": {"base_url": "http://localhost:38787/v1", "capacity_url": "http://localhost:38791/capacity"}
+  },
+  "free_cloud_host": "gpu-host",
+  "paid_models": ["manager-codex-paid", "manager-claude-paid", "manager-gemini-paid", "manager-grok-paid", "manager-mimo-paid", "manager-hf-paid"],
+  "experimental_models": ["manager-darkbloom-experimental", "manager-akashml-experimental", "manager-salad-experimental"]
+}

@@ -1,0 +1,6 @@
+style_id: cmos-notes-bib
+name: Chicago notes-bibliography
+domains: [history, long_form, legal_adjacent]
+cite_processor: csl:chicago-notes-bibliography
+accessibility_export: true
+decision_authority: prepare_only

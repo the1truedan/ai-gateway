@@ -1,0 +1,89 @@
+{
+  "tab_label": "ai-gateway",
+  "focus": true,
+  "root": {
+    "type": "split",
+    "direction": "right",
+    "ratio": 0.4,
+    "first": {
+      "type": "split",
+      "direction": "down",
+      "ratio": 0.5,
+      "first": {
+        "type": "pane",
+        "label": "stack",
+        "cwd": "$HOME/ai-gateway",
+        "command": [
+          "sh",
+          "-c",
+          "echo '=== ai-gateway stack ==='; ./scripts/docker/compose.sh ps 2>/dev/null || docker compose ps; echo; echo 'Logs: ./scripts/docker/compose.sh logs -f litellm headroom open-webui'; exec \"$SHELL\""
+        ]
+      },
+      "second": {
+        "type": "split",
+        "direction": "down",
+        "ratio": 0.55,
+        "first": {
+          "type": "pane",
+          "label": "usage",
+          "cwd": "$HOME/ai-gateway",
+          "command": [
+            "sh",
+            "-c",
+            "set -a; [ -f .env ] && . ./.env; set +a; echo 'Token / spend CLI snapshot (LiteLLM UI is system of record: http://localhost:4000/ui/login/)'; echo; USAGE_SNAPSHOT_INTERVAL=30 ./scripts/usage_snapshot.sh || true; exec \"$SHELL\""
+          ]
+        },
+        "second": {
+          "type": "pane",
+          "label": "trace",
+          "cwd": "$HOME/ai-gateway",
+          "command": [
+            "sh",
+            "-c",
+            "echo 'agenttrace — multi-agent session cost/health (offline logs)'; echo 'LiteLLM UI remains spend SoR: http://localhost:4000/ui/login/'; echo; if command -v agenttrace >/dev/null 2>&1; then agenttrace --version 2>/dev/null || true; echo 'Launch: agenttrace'; echo '(or keep usage pane for live gateway snapshot)'; else echo 'Install: brew install luoyuctl/tap/agenttrace'; fi; exec \"$SHELL\""
+          ]
+        }
+      }
+    },
+    "second": {
+      "type": "split",
+      "direction": "down",
+      "ratio": 0.33,
+      "first": {
+        "type": "pane",
+        "label": "health",
+        "cwd": "$HOME/ai-gateway",
+        "command": [
+          "sh",
+          "-c",
+          "set -a; [ -f .env ] && . ./.env; set +a; echo 'LiteLLM:'; curl -sS http://127.0.0.1:4000/health/liveliness || true; echo; echo 'Headroom:'; curl -sS -o /dev/null -w 'HTTP %{http_code}\\n' http://127.0.0.1:8787/readyz || true; echo; echo 'Open WebUI: http://localhost:8080  (→ Headroom → LiteLLM)'; echo 'LiteLLM UI: http://localhost:4000/ui/login/'; echo 'Hister:     http://localhost:4433  (profile search)'; echo 'Botmem:     http://localhost:12412 (profile memory)'; echo 'Grafana:    http://localhost:3000'; echo 'LM Studio:  http://localhost:1234/v1'; echo; echo 'DEFAULT (token conservation):'; echo \"  OPENAI_BASE_URL=http://localhost:8787/v1\"; echo 'BYPASS (raw LiteLLM):'; echo \"  OPENAI_BASE_URL=http://localhost:4000/v1\"; echo \"model=manager-fast-turbo | manager-fast-local | manager-mlx-fast\"; exec \"$SHELL\""
+        ]
+      },
+      "second": {
+        "type": "split",
+        "direction": "down",
+        "ratio": 0.5,
+        "first": {
+          "type": "pane",
+          "label": "agent",
+          "cwd": "$HOME/ai-gateway",
+          "command": [
+            "sh",
+            "-c",
+            "set -a; [ -f .env ] && . ./.env; set +a; export OPENAI_BASE_URL=http://localhost:8787/v1; export OPENAI_API_KEY=\"${LITELLM_MASTER_KEY:-}\"; export OPENAI_API_BASE=\"$OPENAI_BASE_URL\"; echo 'Agent pane — Headroom → LiteLLM (token conservation)'; echo \"OPENAI_BASE_URL=$OPENAI_BASE_URL\"; echo 'Bypass raw LiteLLM: export OPENAI_BASE_URL=http://localhost:4000/v1'; echo 'Tiered orchestration: plan=role-plan | execute=role-execute | reason=role-reason | recon=role-recon | audit=role-audit | PHI=role-phi-local'; echo 'Recommended for new coding/tool sessions: role-execute'; echo 'Compatibility default remains manager-fast-turbo (same backend)'; echo 'Examples:'; echo '  pi'; echo '  tau'; echo '  ~/GitHub/turnstone/.venv/bin/turnstone --base-url http://localhost:8787/v1 --model manager-fast-turbo --api-key \"$LITELLM_MASTER_KEY\" --skip-permissions'; echo '  ./scripts/smoke_role_tiers.sh'; exec \"$SHELL\""
+          ]
+        },
+        "second": {
+          "type": "pane",
+          "label": "grok",
+          "cwd": "$HOME/ai-gateway",
+          "command": [
+            "sh",
+            "-c",
+            "set -a; [ -f .env ] && . ./.env; set +a; export OPENAI_BASE_URL=http://localhost:8787/v1; export OPENAI_API_KEY=\"${LITELLM_MASTER_KEY:-}\"; export OPENAI_API_BASE=\"$OPENAI_BASE_URL\"; echo 'Grok Build pane — route via Headroom→LiteLLM for spend transparency in LiteLLM UI'; echo \"OPENAI_BASE_URL=$OPENAI_BASE_URL\"; echo 'Direct xAI bypass will NOT appear in LiteLLM spend.'; echo; if command -v grok >/dev/null 2>&1; then echo 'Launch: grok   (or: grok --model manager-fast-turbo)'; else echo 'grok CLI not on PATH (~/.local/bin/grok)'; fi; exec \"$SHELL\""
+          ]
+        }
+      }
+    }
+  }
+}

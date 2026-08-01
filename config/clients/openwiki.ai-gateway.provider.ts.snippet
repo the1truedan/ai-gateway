@@ -1,0 +1,20 @@
+// Merge into openwiki/src/constants.ts
+// 1) Add "ai-gateway" to OpenWikiProvider union + SELECTABLE_OPENWIKI_PROVIDERS
+// 2) Add this entry to PROVIDER_CONFIGS:
+
+/*
+  "ai-gateway": {
+    apiKeyEnvKey: OPENAI_API_KEY_ENV_KEY,
+    baseURL: "http://localhost:4000/v1",
+    label: "AI Gateway (LiteLLM)",
+    modelOptions: [
+      { id: "manager-fast-turbo", label: "Manager Fast Turbo" },
+      { id: "manager-fast-local", label: "Manager Fast Local" },
+      { id: "manager-reasoning-local", label: "Manager Reasoning Local" },
+      { id: "manager-grok-coding", label: "Grok Code Fast" },
+      { id: "manager-openrouter-free", label: "OpenRouter Free (via gateway)" },
+    ],
+  },
+*/
+
+// createModel() already honors providerConfig.baseURL for ChatOpenAI providers.

@@ -1,0 +1,52 @@
+{
+  "_doc": "mcp-obsidian via Obsidian Local REST API community plugin. Clone: ~/GitHub/mcp-obsidian. Do not commit real OBSIDIAN_API_KEY.",
+  "prereqs": [
+    "Install Obsidian community plugin: Local REST API (coddingtonbear)",
+    "Enable plugin; copy API key from plugin settings",
+    "Default host 127.0.0.1 port 27124 (HTTPS plugin default may differ — check plugin UI)",
+    "Confirm vault path for this host (skill may still say /mnt/d/Obsidian Vault/AI Research/)"
+  ],
+  "opencode": {
+    "mcp": {
+      "mcp-obsidian": {
+        "type": "local",
+        "command": ["uvx", "mcp-obsidian"],
+        "enabled": false,
+        "environment": {
+          "OBSIDIAN_API_KEY": "<from-plugin>",
+          "OBSIDIAN_HOST": "127.0.0.1",
+          "OBSIDIAN_PORT": "27124"
+        }
+      }
+    }
+  },
+  "mcpServers_shared": {
+    "mcp-obsidian": {
+      "command": "uvx",
+      "args": ["mcp-obsidian"],
+      "lifecycle": "lazy",
+      "env": {
+        "OBSIDIAN_API_KEY": "${OBSIDIAN_API_KEY}",
+        "OBSIDIAN_HOST": "127.0.0.1",
+        "OBSIDIAN_PORT": "27124"
+      }
+    }
+  },
+  "tools": [
+    "list_files_in_vault",
+    "list_files_in_dir",
+    "get_file_contents",
+    "search",
+    "patch_content",
+    "append_content",
+    "delete_file"
+  ],
+  "catalog_split_pattern": {
+    "detect": "Notes > ~800 lines or multi-topic H1/H2 sections",
+    "split": "Atomic Title Case note files",
+    "index": "Index notes as lists of [[wikilinks]] (vault skill: flat + links > deep folders)",
+    "reference_map": "Trailing Related section and/or frontmatter related: [[A]], [[B]]",
+    "optional_graph": "Understand-Anything /understand-knowledge after indexes exist; Hister local-file index for semantic vault search without Obsidian open"
+  },
+  "_enable": "Set OBSIDIAN_API_KEY in shell or OpenCode environment; flip enabled true; restart client."
+}

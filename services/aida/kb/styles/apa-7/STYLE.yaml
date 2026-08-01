@@ -1,0 +1,6 @@
+style_id: apa-7
+name: APA 7th (public summary)
+domains: [social_science, hci, psychology]
+cite_processor: csl:apa
+accessibility_export: true
+decision_authority: prepare_only

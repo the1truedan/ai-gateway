@@ -1,0 +1,34 @@
+{
+  "host_model_map": {
+    "gpu-host": {
+      "manager-code": "manager-worker-gpu-host-code",
+      "manager-plan": "manager-worker-gpu-host-reason",
+      "manager-reason": "manager-worker-gpu-host-reason",
+      "manager-research": "manager-worker-gpu-host-research",
+      "manager-review": "manager-worker-gpu-host-review",
+      "manager-vision": "manager-worker-gpu-host-vision",
+      "manager-phi-local": "manager-worker-gpu-host-phi"
+    },
+    "mac-client": {
+      "manager-code": "manager-worker-m4-code",
+      "manager-plan": "manager-worker-m4-reason",
+      "manager-reason": "manager-worker-m4-reason",
+      "manager-research": "manager-worker-m4-research",
+      "manager-review": "manager-worker-m4-review",
+      "manager-vision": "manager-worker-m4-vision",
+      "manager-phi-local": "manager-worker-m4-phi"
+    },
+    "nas-host": {
+      "manager-code": "manager-worker-nas-host-code",
+      "manager-vision": "manager-worker-nas-host-vision"
+    }
+  },
+  "hosts": {
+    "gpu-host": {"base_url": "http://<gpu-host-ip>:4000/v1", "capacity_url": "http://<gpu-host-ip>:8794/capacity"},
+    "mac-client": {"base_url": "http://<mac-client-ip>:4000/v1", "capacity_url": "http://<mac-client-ip>:8794/capacity"},
+    "nas-host": {"base_url": "http://<nas-host-ip>:4000/v1", "capacity_url": "http://<nas-host-ip>:8794/capacity"}
+  },
+  "free_cloud_host": "nas-host",
+  "paid_models": ["manager-codex-paid", "manager-claude-paid", "manager-gemini-paid", "manager-grok-paid", "manager-mimo-paid", "manager-hf-paid"],
+  "experimental_models": ["manager-darkbloom-experimental", "manager-akashml-experimental", "manager-salad-experimental"]
+}

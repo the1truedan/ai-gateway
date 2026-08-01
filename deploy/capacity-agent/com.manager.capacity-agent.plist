@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.manager.capacity-agent</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$HOME/ai-gateway/scripts/run_capacity_agent.sh</string>
+  </array>
+  <key>WorkingDirectory</key><string>$HOME/ai-gateway</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>CAPACITY_AGENT_HOST_ID</key><string>mac-client</string>
+    <key>CAPACITY_AGENT_HOST</key><string>0.0.0.0</string>
+    <key>CAPACITY_AGENT_PORT</key><string>8794</string>
+    <key>UV_CACHE_DIR</key><string>/Volumes/ai-data/uv-cache</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/tmp/manager-capacity-agent.log</string>
+  <key>StandardErrorPath</key><string>/tmp/manager-capacity-agent.err</string>
+</dict>
+</plist>

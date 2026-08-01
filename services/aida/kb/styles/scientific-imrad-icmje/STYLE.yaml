@@ -1,0 +1,45 @@
+style_id: scientific-imrad-icmje
+name: Scientific IMRaD + ICMJE manuscript
+edition: "ICMJE Recommendations (public summary)"
+domains:
+  - original_research
+  - caregiver_ai
+  - acl_track
+  - medical_methods
+structure: imrad
+cite_processor: csl:american-medical-association
+front_matter:
+  - title
+  - authors
+  - affiliations
+  - abstract_structured
+  - keywords
+body:
+  - introduction
+  - methods
+  - results
+  - discussion
+  - conclusions
+back_matter:
+  - references
+  - tables
+  - figures
+  - funding
+  - conflicts
+  - data_availability
+  - author_contributions
+layout:
+  margins_in: 1.0
+  body_pt: 12
+  line_spacing: 2.0
+  page: letter_or_A4_per_venue
+reporting_guidelines_optional:
+  - STROBE
+  - CONSORT
+  - PRISMA
+accessibility_export: true
+decision_authority: prepare_only
+blind_review_mode: optional
+notes: >
+  Journal author guide overrides cosmetics. Free-format submission still
+  requires complete sections. Prepare-only — no invented results or cites.

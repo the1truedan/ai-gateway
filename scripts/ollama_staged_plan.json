@@ -1,0 +1,83 @@
+{
+  "created_at": "2026-07-13T22:46:12.636594+00:00",
+  "models_dir": "/Volumes/models/ollama/models",
+  "notes": [
+    "2026-07-13 audit: all stage 1\u20133 M4 models already installed (13 models, 75.3 GB); registry current; no enabled pulls. Stage 4 remains rejected.",
+    "2026-07-13 reclaim applied: removed batiai/gemma4-26b:iq4 (~13.9 GB) + qwen2.5-coder:14b-instruct-q5_K_M (~10.5 GB); dropped legacy TQ symlinks gemma4-26b-iq4 / qwen2.5-coder-14b (active TQ = gemma4-12b + qwen3.5-9b).",
+    "Profile: Apple M4 Mac Mini, 24 GB unified memory",
+    "Grok models: https://grok.com/share/c2hhcmQtNA_df5b772c-2fd6-473a-8dd2-548d90978af9",
+    "Grok fabric: https://grok.com/share/c2hhcmQtNA_7cefc7c0-8c66-4dec-8a46-0b4ea9dd9cfb",
+    "Second opinion: Qwen3/Qwen3.5 win on 24 GB; Llama 3.3 (Ollama 70B ~43 GB) does not fit.",
+    "qwen3-coder:30b is quality pick / wrong host for M4 agent loops (stage 4).",
+    "Stage 1: trim redundant embedders still on disk after prior cleanup.",
+    "Stage 2: M4-safe specialist pulls (OCR + Greek translation) for MCP sub-agents.",
+    "Stage 3: optional \u2014 qwen3.5:9b recommended; llama3.1:8b for Llama A/B only.",
+    "Stage 4: rejected on 24 GB (enable only if you accept swap/thrashing).",
+    "Runtime rule: one large model loaded at a time; embedders (~2 GB) can stay resident.",
+    "Cloud: Gemini via GEMINI_API_KEY (not Ollama). Validate: scripts/check_litellm_routes.py",
+    "OpenCV is not an Ollama model \u2014 use as MCP preprocess tool before OCR models."
+  ],
+  "actions": [
+    {
+      "action": "pull",
+      "model": "llama3.3:70b",
+      "reason": "REJECTED M4-24GB \u2014 Llama 3.3 on Ollama is 70B-only; impossible on 24 GB",
+      "size_gb": 42.52,
+      "stage": 4,
+      "enabled": false,
+      "role": "",
+      "litellm_route": ""
+    },
+    {
+      "action": "pull",
+      "model": "qwen3-coder:30b",
+      "reason": "REJECTED M4-24GB \u2014 quality pick / wrong host; MoE ~19 GB unusable with tools+context on Mini",
+      "size_gb": 18.56,
+      "stage": 4,
+      "enabled": false,
+      "role": "",
+      "litellm_route": ""
+    },
+    {
+      "action": "pull",
+      "model": "qwen3:30b-a3b",
+      "reason": "REJECTED M4-24GB \u2014 Same 24 GB constraint as qwen3-coder:30b",
+      "size_gb": 18.56,
+      "stage": 4,
+      "enabled": false,
+      "role": "",
+      "litellm_route": ""
+    },
+    {
+      "action": "pull",
+      "model": "gemma4:26b",
+      "reason": "REJECTED M4-24GB \u2014 Official 26B worse fit than batiai/gemma4-26b:iq4 already installed",
+      "size_gb": 18.0,
+      "stage": 4,
+      "enabled": false,
+      "role": "",
+      "litellm_route": ""
+    },
+    {
+      "action": "pull",
+      "model": "qwen3.5:27b",
+      "reason": "REJECTED M4-24GB \u2014 Too tight for reliable agent loops on 24 GB",
+      "size_gb": 17.42,
+      "stage": 4,
+      "enabled": false,
+      "role": "",
+      "litellm_route": ""
+    },
+    {
+      "action": "pull",
+      "model": "devstral-small-2:24b",
+      "reason": "REJECTED M4-24GB \u2014 M4 24 GB: technically loads, practically unusable with agents",
+      "size_gb": 15.18,
+      "stage": 4,
+      "enabled": false,
+      "role": "",
+      "litellm_route": ""
+    }
+  ],
+  "last_audit_at": "2026-07-13T22:46:19.165851+00:00"
+}

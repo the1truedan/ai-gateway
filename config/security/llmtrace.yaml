@@ -1,0 +1,60 @@
+# LLMTrace shadow proxy (compose profile security).
+# Opt-in only: OPENAI_BASE_URL=http://localhost:8090/v1
+# Default agents/OWUI stay on Headroom :8787 — do not make this the primary hop.
+#
+# upstream defaults to Headroom so token conservation still applies on the
+# shadow lane. Override with LLMTRACE_UPSTREAM_URL=http://litellm:4000 for
+# raw LiteLLM bypass traces.
+
+listen_addr: "0.0.0.0:8080"
+upstream_url: "http://headroom:8787"
+
+storage:
+  profile: "lite"
+  database_path: "/data/llmtrace.db"
+  auto_migrate: true
+
+logging:
+  level: "info"
+  format: "json"
+
+timeout_ms: 600000
+connection_timeout_ms: 5000
+max_connections: 256
+
+enable_tls: false
+enable_security_analysis: true
+enable_trace_storage: true
+enable_streaming: true
+security_analysis_timeout_ms: 5000
+trace_storage_timeout_ms: 10000
+
+rate_limiting:
+  enabled: false
+
+circuit_breaker:
+  enabled: true
+  failure_threshold: 10
+  recovery_timeout_ms: 30000
+  half_open_max_calls: 3
+
+alerts:
+  enabled: false
+  channels: []
+  cooldown_seconds: 300
+
+cost_estimation:
+  enabled: true
+
+cost_caps:
+  enabled: true
+  default_budget_caps: []
+
+health_check:
+  enabled: true
+  path: "/health"
+  interval_seconds: 10
+  timeout_ms: 5000
+  retries: 3
+
+# PHI: keep local; do not enable managed LLMTrace cloud for caregiver traffic.

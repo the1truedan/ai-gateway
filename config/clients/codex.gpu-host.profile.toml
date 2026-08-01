@@ -1,0 +1,12 @@
+# Append to ~/.codex/config.toml. Source ~/ai-gateway/.env before launch.
+model_provider = "gpu_host_headroom"
+model = "role-auto"
+
+[model_providers.gpu_host_headroom]
+name = "gpu-host Headroom → LiteLLM"
+base_url = "http://localhost:8787/v1"
+env_key = "LITELLM_MASTER_KEY"
+
+[profiles.gpu-host]
+model_provider = "gpu_host_headroom"
+model = "role-auto"

@@ -1,0 +1,7 @@
+.git
+**/.venv
+**/__pycache__
+**/*.pyc
+.DS_Store
+import-data
+litellm_data

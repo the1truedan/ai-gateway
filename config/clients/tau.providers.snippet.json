@@ -1,0 +1,33 @@
+{
+  "name": "ai-gateway",
+  "type": "openai-compatible",
+  "base_url": "http://localhost:8787/v1",
+  "api_key_env": "LITELLM_MASTER_KEY",
+  "credential_name": "ai-gateway",
+  "default_model": "tier-nvidia-fast",
+  "models": [
+    "tier-nvidia-fast",
+    "tier-nvidia-reason",
+    "role-auto",
+    "role-execute",
+    "role-reason",
+    "manager-fast-turbo",
+    "manager-fast-local",
+    "manager-reasoning-local",
+    "manager-reasoning-cloud",
+    "manager-grok-coding",
+    "manager-openrouter-free"
+  ],
+  "context_windows": {
+    "manager-fast-turbo": 32768,
+    "manager-fast-local": 32768,
+    "manager-reasoning-local": 32768,
+    "manager-reasoning-cloud": 131072,
+    "manager-grok-coding": 256000,
+    "manager-openrouter-free": 200000
+  },
+  "headers": {},
+  "timeout_seconds": 600.0,
+  "max_retries": 2,
+  "max_retry_delay_seconds": 1.0
+}

@@ -1,0 +1,7 @@
+style_id: plain-care
+name: Plain-language caregiving
+domains: [medical, caregiver, insurance, hospice]
+cite_processor: null
+accessibility_export: true
+decision_authority: prepare_only
+notes: Dual-audience briefs + JIST; 6th-grade preference for caregivee path.

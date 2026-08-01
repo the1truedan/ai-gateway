@@ -1,0 +1,9 @@
+[profiles.nas-host]
+model = "role-auto"
+model_provider = "nas-host-headroom"
+
+[model_providers.nas-host-headroom]
+name = "NAS-HOST Headroom"
+base_url = "http://<nas-host-ip>:8787/v1"
+env_key = "LITELLM_MASTER_KEY"
+wire_api = "responses"

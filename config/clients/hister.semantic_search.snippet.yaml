@@ -1,0 +1,35 @@
+# Overlay for Hister semantic search (Ollama embedders already on host).
+# Default upstream model qwen3-embedding:8b is NOT installed; use nomic/bge.
+# Merge under hister config key semantic_search / HISTER__SEMANTIC_SEARCH__* env.
+#
+# Preferred start from ai-gateway:
+#   ./scripts/docker/compose.sh --profile search up -d
+# Compose already injects HISTER__SEMANTIC_SEARCH__* (see docker-compose.yml).
+# From inside the hister container, use host.docker.internal for host Ollama,
+# or http://litellm:4000 for manager-embed.
+
+semantic_search:
+  enable: true
+  embedding_endpoint: "http://localhost:11434/v1/embeddings"
+  embedding_model: "nomic-embed-text-v2-moe:latest"
+  api_key: "ollama"
+  dimensions: 768
+  max_context_length: 8192
+  chunk_overlap: 128
+  similarity_threshold: 0.1
+  result_limit: 50
+  semantic_weight: 0.4
+  max_embedding_concurrency: 4
+
+# Optional: route embeddings through LiteLLM (manager-embed already in litellm_config):
+#   embedding_endpoint: "http://localhost:4000/v1/embeddings"   # host clients
+#   embedding_endpoint: "http://litellm:4000/v1/embeddings"     # docker profile
+#   embedding_model: "manager-embed"
+#   api_key: "<LITELLM_MASTER_KEY>"
+#
+# Env equivalent for compose:
+#   HISTER_EMBEDDING_ENDPOINT=http://litellm:4000/v1/embeddings
+#   HISTER_EMBEDDING_MODEL=manager-embed
+#   HISTER_EMBEDDING_API_KEY=$LITELLM_MASTER_KEY
+
+# MCP: connect agents (Turnstone / Open WebUI / pi) to Hister after it is up on :4433.

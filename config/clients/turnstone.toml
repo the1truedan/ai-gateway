@@ -1,0 +1,47 @@
+# Copy to ~/.config/turnstone/config.toml (chmod 600) or pass --config.
+# Uses production LiteLLM proxy in ~/ai-gateway (Docker :4000).
+# Set OPENAI_API_KEY to LITELLM_MASTER_KEY from ~/ai-gateway/.env before launch.
+
+[api]
+base_url = "http://localhost:8787/v1"
+# api_key is taken from OPENAI_API_KEY env when unset here
+
+[model]
+name = "role-auto"
+temperature = 0.2
+context_window = 32768
+
+[models.local-fast]
+name = "tier-nvidia-fast"
+provider = "openai"
+base_url = "http://localhost:8787/v1"
+context_window = 32768
+
+[models.local-fast-ollama]
+name = "manager-fast-local"
+provider = "openai"
+base_url = "http://localhost:8787/v1"
+context_window = 32768
+
+[models.local-reason]
+name = "manager-reasoning-local"
+provider = "openai"
+base_url = "http://localhost:8787/v1"
+context_window = 32768
+
+[models.cloud-reason]
+name = "manager-reasoning-cloud"
+provider = "openai"
+base_url = "http://localhost:8787/v1"
+context_window = 131072
+
+[models.grok-coding]
+name = "manager-grok-coding"
+provider = "openai"
+base_url = "http://localhost:8787/v1"
+context_window = 256000
+
+# The ai-gateway Compose service uses the internal token-conservation path:
+#   LLM_BASE_URL=http://headroom:8787/v1
+# Start it with:
+#   ./scripts/docker/compose.sh --profile turnstone up -d turnstone

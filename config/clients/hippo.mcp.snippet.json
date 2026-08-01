@@ -1,0 +1,25 @@
+{
+  "_doc": "hippo-memory MCP — agent/coding memory SoR (SQLite .hippo/ per repo). Install: npm i -g hippo-memory. Init: hippo init. Pair with botmem for personal life memory — see memory_map.md.",
+  "opencode": {
+    "mcp": {
+      "hippo": {
+        "type": "local",
+        "command": ["hippo", "mcp"],
+        "enabled": true
+      }
+    }
+  },
+  "mcpServers_shared": {
+    "hippo": {
+      "command": "hippo",
+      "args": ["mcp"],
+      "lifecycle": "lazy"
+    }
+  },
+  "_path_note": "Ensure hippo is on PATH (npm global often ~/.local/bin). This Mac OpenCode/shared MCP use absolute $HOME/.local/bin/hippo.",
+  "_smoke": [
+    "cd ~/ai-gateway && hippo remember 'test' --tag smoke",
+    "hippo recall test --json",
+    "hippo mcp   # stdio MCP for agents"
+  ]
+}

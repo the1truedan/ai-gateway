@@ -1,0 +1,31 @@
+# Overlay: Hybrid bookmark stack (Hister + Karakeep MCP tagging)
+# Safe to add alongside existing compose; does NOT restart hister if running live
+services:
+  linkwarden-syncer:
+    image: ghcr.io/linkwarden/server-cloudflare:latest
+    container_name: linkwarden-syncer-sidecar
+    profiles: ["bookmarks"]
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /app/data/uploads:/app/data/uploads:size=1024m
+    volumes:
+      - ./scripts/bookmarks/linkwarden_export_loop.sh:/export-loop.sh:ro
+    entrypoint: ["/bin/sh", "/export-loop.sh"]
+  karaka-mcp-server:
+    image: ghcr.io/karakeep-app/karakeep-mcp:latest
+    container_name: karakeep-mcp-sidecar
+    profiles: ["bookmarks"]
+    restart: unless-stopped
+    tmpfs:
+      - /tmp:size=512m
+    environment:
+      KARAKEEP_API_ADDR=${KARAKEEP_CLOUD_URL:-https://try.karakeep.app}  
+  hister-bookmark-triggerer:
+    image: docker.io/library/bash:${BASH_VERSION//./_}-alpine@sha256:b091a8c7b4f3dcd3e2eb8cfaeae3ec6ba0cbdbdc4ca5f4a5df3cbe6da5fcfb1b
+    container_name: hister-bookmark-triggerer
+    profiles: ["bookmarks"]
+    restart: unless-stopped
+    environment:
+      - HISTER_API_BASE=http://hister:4433
+      - BROWSER_HISTORY_PATH=~/Library/Application\ Support/Brave\ Browser/*/History

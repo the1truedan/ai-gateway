@@ -1,0 +1,25 @@
+# Mac Headroom → orchestrator → gpu-host worker. Source .env before launching OMP.
+model: gpu-host-headroom/tier-nvidia-fast
+providers:
+  gpu-host-headroom:
+    baseUrl: http://localhost:8787/v1
+    apiKey: '!printf %s "$LITELLM_MASTER_KEY"'
+    api: openai-completions
+    compat:
+      supportsDeveloperRole: false
+      supportsReasoningEffort: false
+    models:
+      - id: role-auto
+        name: Automatic best-fit local host
+      - id: role-execute
+        name: gpu-host execute (NVIDIA)
+      - id: role-reason
+        name: gpu-host reason (NVIDIA)
+      - id: role-phi-local
+        name: PHI local only
+      - id: tier-nvidia-fast
+        name: gpu-host Qwen coder 14B
+      - id: tier-nvidia-agent
+        name: gpu-host Gemma 4 12B agent fallback
+      - id: tier-nvidia-reason
+        name: gpu-host DeepSeek R1 14B

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "ai-gateway/manager-fast-turbo",
+  "_recommended_model": "ai-gateway/role-execute (use explicitly for new coding/tool sessions; compatibility default above is unchanged)",
+  "provider": {
+    "ai-gateway": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "AI Gateway (Headroom → LiteLLM)",
+      "options": {
+        "baseURL": "http://localhost:8787/v1"
+      },
+      "models": {
+        "manager-fast-turbo": { "name": "Fast coding (TurboQuant)" },
+        "role-execute": { "name": "Role: execute (local)" },
+        "tier-execute-local": { "name": "Tier: execute local" },
+        "role-plan": { "name": "Role: plan (cloud Gemini)" },
+        "tier-plan-cloud": { "name": "Tier: plan cloud" },
+        "role-recon": { "name": "Role: recon (free OR)" },
+        "role-reason": { "name": "Role: reason (local)" },
+        "role-phi-local": { "name": "Role: PHI local only" },
+        "role-audit": { "name": "Role: audit (free)" },
+        "tier-nvidia-fast": { "name": "gpu-host NVIDIA: Qwen coder 14B" },
+        "tier-nvidia-reason": { "name": "gpu-host NVIDIA: DeepSeek R1 14B" },
+        "tier-codex-cloud": { "name": "Cloud: OpenAI GPT-5.6 Terra (non-PHI)" },
+        "manager-codex-cloud": { "name": "Cloud: OpenAI GPT-5.6 Terra (non-PHI)" },
+        "tier-local-fast": { "name": "Tier: local fast" },
+        "tier-local-reason": { "name": "Tier: local reason" },
+        "manager-reasoning-turbo": { "name": "Reasoning (TurboQuant)" },
+        "manager-fast-local": { "name": "Fast local (Ollama)" },
+        "manager-reasoning-local": { "name": "Reasoning local (Ollama)" },
+        "tier-local-mlx": { "name": "Tier: MLX" },
+        "manager-mlx-fast": { "name": "MLX fast (LM Studio)" },
+        "tier-gemini": { "name": "Tier: Gemini" },
+        "manager-gemini-fast": { "name": "Gemini 3.5 Flash" },
+        "manager-gemini-agent": { "name": "Gemini agent" },
+        "tier-free-cloud": { "name": "Tier: free cloud (OR)" },
+        "manager-openrouter-free": { "name": "OpenRouter free router" },
+        "manager-big-context": { "name": "Big context free (Qwen coder)" },
+        "manager-audit-claude": { "name": "Audit free (Laguna XS)" },
+        "manager-understand-audit": { "name": "Understand audit free" },
+        "tier-paid-cloud": { "name": "Tier: paid (Grok Code)" },
+        "manager-grok-coding": { "name": "Grok Code Fast" },
+        "manager-vision-local": { "name": "Vision VLM local" },
+        "tier-local-vision": { "name": "Tier: local vision" },
+        "or-free-qwen-qwen3-coder-free": { "name": "OR free: Qwen3 Coder 1M" },
+        "or-free-poolside-laguna-m-1-free": { "name": "OR free: Laguna M.1" },
+        "or-free-poolside-laguna-xs-2-1-free": { "name": "OR free: Laguna XS 2.1" },
+        "or-free-nvidia-nemotron-3-super-120b-a12b-free": { "name": "OR free: Nemotron Super" },
+        "or-free-nvidia-nemotron-3-ultra-550b-a55b-free": { "name": "OR free: Nemotron Ultra" },
+        "or-free-cohere-north-mini-code-free": { "name": "OR free: North Mini Code" },
+        "or-free-google-gemma-4-31b-it-free": { "name": "OR free: Gemma 4 31B multimodal" }
+      }
+    }
+  },
+  "_auth_note": "Store key via /connect or ~/.local/share/opencode/auth.json: {\"ai-gateway\":{\"type\":\"api\",\"key\":\"$LITELLM_MASTER_KEY\"}}. Do not commit secrets.",
+  "_merge_note": "Merge provider + model into ~/.config/opencode/opencode.json; preserve existing mcp blocks."
+}

@@ -1,0 +1,6 @@
+style_id: gpo
+name: GPO / federal correspondence tone
+domains: [government_letter, official]
+cite_processor: null
+accessibility_export: true
+decision_authority: prepare_only

@@ -1,0 +1,49 @@
+{
+  "_doc": "Hister MCP — Streamable HTTP at POST /mcp after compose profile search. Semantic search uses nomic 768d (host Ollama) or LiteLLM manager-embed.",
+  "endpoint": "http://<gpu-host-ip>:4433/mcp",
+  "compose": "./scripts/docker/compose.sh --profile search up -d",
+  "opencode": {
+    "mcp": {
+      "hister": {
+        "type": "remote",
+        "url": "http://<gpu-host-ip>:4433/mcp",
+        "enabled": true
+      }
+    }
+  },
+  "mcpServers_shared": {
+    "hister": {
+      "url": "http://<gpu-host-ip>:4433/mcp",
+      "lifecycle": "lazy"
+    }
+  },
+  "claude_desktop_cursor": {
+    "mcpServers": {
+      "hister": {
+        "url": "http://<gpu-host-ip>:4433/mcp",
+        "headers": {
+          "Authorization": "Bearer <optional-access-token>"
+        }
+      }
+    }
+  },
+  "semantic_env": {
+    "default": {
+      "HISTER_EMBEDDING_ENDPOINT": "http://host.docker.internal:11434/v1/embeddings",
+      "HISTER_EMBEDDING_MODEL": "nomic-embed-text-v2-moe:latest",
+      "HISTER_EMBEDDING_API_KEY": "ollama",
+      "HISTER_EMBEDDING_DIMENSIONS": "768"
+    },
+    "via_litellm_manager_embed": {
+      "HISTER_EMBEDDING_ENDPOINT": "http://litellm:4000/v1/embeddings",
+      "HISTER_EMBEDDING_MODEL": "manager-embed",
+      "HISTER_EMBEDDING_API_KEY": "$LITELLM_MASTER_KEY",
+      "HISTER_EMBEDDING_DIMENSIONS": "768"
+    }
+  },
+  "_smoke": [
+    "curl -sS -X POST http://<gpu-host-ip>:4433/mcp -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"smoke\",\"version\":\"0\"}}}'",
+    "curl -sS -X POST http://<gpu-host-ip>:4433/mcp -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}'",
+    "curl -sS -X POST http://<gpu-host-ip>:4433/mcp -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"search\",\"arguments\":{\"query\":\"litellm\",\"limit\":5,\"semantic\":true}}}'"
+  ]
+}

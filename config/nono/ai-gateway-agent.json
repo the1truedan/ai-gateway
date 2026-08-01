@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "name": "ai-gateway-agent",
+    "version": "1.0.0",
+    "description": "Sandbox profile for coding agents that use Headroom→LiteLLM (ai-gateway :8787→:4000), Ollama, TurboQuant, and Hister."
+  },
+  "workdir": {
+    "access": "readwrite"
+  },
+  "network": {
+    "block": false,
+    "open_port": [8787, 4000, 11434, 8081, 8082, 4433, 8080]
+  },
+  "filesystem": {
+    "read": [
+      "$HOME/ai-gateway",
+      "$HOME/.pi",
+      "$HOME/.omp",
+      "$HOME/.tau",
+      "$HOME/.openwiki",
+      "$HOME/.config/opencode"
+    ]
+  }
+}

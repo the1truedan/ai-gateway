@@ -1,0 +1,763 @@
+{
+  "schema_version": 1,
+  "project": "ai-gateway",
+  "updated_at": "2026-07-18",
+  "_memory_note": "Dual memory: botmem=personal/life (compose profile memory); hippo-memory=agent/coding (host .hippo + MCP). See config/clients/memory_map.md",
+  "architecture": {
+    "agent_head": "herdr",
+    "token_conservation": "headroom",
+    "inference_head": "litellm",
+    "chat_surface": "open-webui",
+    "notes": "Herdr multiplexes agent PTYs on the host; Headroom :8787 is the always-on OpenAI-compatible front door for token conservation; LiteLLM :4000 remains the shared inference bus + Admin UI (spend). Open WebUI \u2192 Headroom \u2192 LiteLLM. Collie is optional mobile UI over Tailscale. Do not put Herdr in Docker as a LiteLLM replacement. Fallback: local \u2192 Gemini (Google One) \u2192 free OpenRouter \u2192 paid xAI. Tiered orchestration: role-plan (cloud) / role-execute (local) / role-phi-local (no cloud)."
+  },
+  "context_sources": [
+    "https://grok.com/share/c2hhcmQtNA_d07d2ee7-9ae1-4418-820d-7ea7a41e17b4",
+    "https://grok.com/share/c2hhcmQtNA_df5b772c-2fd6-473a-8dd2-548d90978af9",
+    "https://grok.com/share/c2hhcmQtNA_7cefc7c0-8c66-4dec-8a46-0b4ea9dd9cfb",
+    "https://grok.com/share/c2hhcmQtNA_3d7397a9-0e90-4f6a-9f14-52de39edfdaf",
+    "import-data/output/grok/MANAGER_Integration_Rankings_Top_Fits_864ca2aa-95ce-4f75-b8b8-312a86e9e3b7.json",
+    "import-data/output/grok/MANAGER_metrics_reporting_to_OTel__grafprom_d2dfa912-ceaf-402a-945b-b1805949cb09.json",
+    "~/GitHub recon 2026-07-09 (~350 pulls; ~25 AI-stack relevant)"
+  ],
+  "hosts": {
+    "mac_m4": {
+      "role": "dev + TurboQuant Metal + Ollama",
+      "compose_overlay": "docker-compose.mac.yml",
+      "profile": "mac"
+    },
+    "linux_popos": {
+      "role": "CUDA builds + Grok Build parallel",
+      "compose_overlay": "docker-compose.linux.yml",
+      "profile": "linux"
+    },
+    "unraid": {
+      "role": "always-on LAN gateway + observability",
+      "compose_overlay": "docker-compose.linux.yml",
+      "profile": "linux"
+    }
+  },
+  "wired": [
+    {
+      "id": "litellm-proxy",
+      "rank": 1,
+      "status": "wired",
+      "paths": [
+        "litellm_config.yaml",
+        "docker-compose.yml",
+        "scripts/start_litellm.sh"
+      ],
+      "notes": "Claude Code + Understand-Anything gateway; Ollama, TurboQuant, Gemini (AI Studio), OpenRouter free, xAI fallbacks; tier-* aliases; manager-embed (nomic via Ollama) for Hister/RAG"
+    },
+    {
+      "id": "gemini-ai-studio",
+      "rank": 1.5,
+      "status": "wired",
+      "paths": [
+        "litellm_config.yaml",
+        "litellm_config.linux.yaml",
+        "docker-compose.yml",
+        ".env.example",
+        "config/clients/RUNBOOK.md"
+      ],
+      "notes": "Google One you@example.com \u2192 GEMINI_API_KEY \u2192 manager-gemini-fast/agent/vision + tier-gemini; gemini/ prefix; PHI stays local"
+    },
+    {
+      "id": "open-webui",
+      "rank": 2,
+      "status": "wired",
+      "paths": [
+        "docker-compose.yml"
+      ],
+      "notes": "Chat UI \u2192 Headroom :8787 \u2192 LiteLLM; OPENWEBUI_OPENAI_BASE override for raw litellm:4000; MCP OAuth via WEBUI_SECRET_KEY"
+    },
+    {
+      "id": "prometheus-grafana",
+      "rank": 3,
+      "status": "wired_partial",
+      "paths": [
+        "prometheus.yml",
+        "docker-compose.yml"
+      ],
+      "notes": "LiteLLM /metrics scraped; OTel agent spans for MANAGER orchestrator still open"
+    },
+    {
+      "id": "turboquant-llama-server",
+      "rank": 4,
+      "status": "wired",
+      "paths": [
+        "scripts/start_turboquant_server.sh",
+        "scripts/stop_turboquant_server.sh",
+        "litellm_config.yaml"
+      ],
+      "notes": "Activated models on disk; on M4 24GB run ONE TQ profile at a time (dual gemma4-12b+qwen3.5 + 64K ctx OOMs Metal). Coder :8082 is default primary."
+    },
+    {
+      "id": "ollama-glm52-cloud",
+      "rank": 9,
+      "status": "wired",
+      "paths": [
+        "litellm_config.yaml",
+        "litellm_config.linux.yaml"
+      ],
+      "notes": "manager-reasoning-cloud \u2192 ollama_chat/gpt-oss:20b-cloud TEMP (glm-5.2:cloud needs Ollama paid plan; no Z.ai)"
+    },
+    {
+      "id": "pi-agent-ai-gateway",
+      "rank": 10,
+      "status": "wired",
+      "paths": [
+        "~/.pi/agent/models.json",
+        "~/.pi/agent/settings.json"
+      ],
+      "notes": "pi defaultProvider=ai-gateway \u2192 localhost:8787/v1 (Headroom); defaultModel tier-local-fast / manager-fast-turbo; Ollama direct provider still available as bypass"
+    },
+    {
+      "id": "omp-oh-my-pi",
+      "rank": 10.05,
+      "status": "wired",
+      "paths": [
+        "~/.omp/agent/models.yml",
+        "~/.omp/agent/config.yml",
+        "/opt/homebrew/bin/omp"
+      ],
+      "notes": "Oh My Pi (brew can1357/tap/omp). models.yml: litellm + ai-gateway \u2192 :8787 discovery type litellm; needs LITELLM_MASTER_KEY in env. Smoke: omp -p --model ai-gateway/manager-gemini-fast"
+    },
+    {
+      "id": "opencode-ai-gateway",
+      "rank": 10.1,
+      "status": "wired",
+      "paths": [
+        "config/clients/opencode.ai-gateway.snippet.json",
+        "~/.config/opencode/opencode.json",
+        "~/.local/share/opencode/auth.json"
+      ],
+      "notes": "OpenCode provider ai-gateway \u2192 localhost:8787/v1 Headroom\u2192LiteLLM (@ai-sdk/openai-compatible); default ai-gateway/manager-fast-turbo; auth key=LITELLM_MASTER_KEY; direct OR/xAI remain escape hatch"
+    },
+    {
+      "id": "grok-history-import",
+      "rank": 5,
+      "status": "wired",
+      "paths": [
+        "scripts/import/run_openwebui_import.sh",
+        "scripts/import/convert_grok_build.py",
+        "docker-compose.yml"
+      ],
+      "notes": "grokhistory + grokcode \u2192 Open WebUI JSON/SQL"
+    },
+    {
+      "id": "ctx-grok-plugin",
+      "rank": 6,
+      "status": "wired",
+      "paths": [
+        "scripts/ctx/grok-build/grok-build-to-ctx.py",
+        "scripts/ctx/setup_ctx_grok_plugin.sh"
+      ],
+      "notes": "Agent-history search over Grok Build sessions"
+    },
+    {
+      "id": "openrouter-free-sync",
+      "rank": 7,
+      "status": "wired",
+      "paths": [
+        "scripts/sync_openrouter_free_models.py",
+        "scripts/openrouter_sync_loop.sh"
+      ],
+      "notes": "Daily free-model catalog refresh \u2192 openrouter_free_models.generated.yaml + litellm_data/openrouter_free_catalog.json + config/clients/openrouter-free-models.md"
+    },
+    {
+      "id": "ollama-model-manager",
+      "rank": 8,
+      "status": "wired",
+      "paths": [
+        "scripts/ollama_model_manager.py",
+        "scripts/ollama_staged_plan.json",
+        "scripts/ollama_staged_plan.gpu-host.json"
+      ],
+      "notes": "Profiles: m4-24gb + gpu-host-16gb. Linux: manager-reasoning-local\u2192gemma4:12b, manager-reasoning-deepseek\u2192deepseek-r1:14b. Multi-path models kept until Unraid NFS v4.2 merge."
+    },
+    {
+      "id": "turnstone-ai-gateway",
+      "rank": 11,
+      "status": "wired",
+      "paths": [
+        "config/clients/turnstone.toml",
+        "~/.config/turnstone/config.toml",
+        "~/GitHub/turnstone"
+      ],
+      "notes": "OpenAI-compatible CLI/server \u2192 localhost:4000; smoke via OpenAI client OK. Full compose stack optional (ports 8443/8090; avoid 8080/8081 clash)."
+    },
+    {
+      "id": "hister-local-search",
+      "rank": 12,
+      "status": "wired_partial",
+      "paths": [
+        "config/clients/hister.semantic_search.snippet.yaml",
+        "docker-compose.yml",
+        "~/GitHub/hister"
+      ],
+      "notes": "Compose profile search :4433; semantic_search env nomic 768d (semanticSearchEnabled=true via MCP initialize). MCP registered in OpenCode + ~/.config/mcp/mcp.json (pi/omp). See hister.mcp.snippet.json."
+    },
+    {
+      "id": "nono-ai-gateway-agent",
+      "rank": 13,
+      "status": "wired",
+      "paths": [
+        "config/nono/ai-gateway-agent.json",
+        "~/.config/nono/profiles/ai-gateway-agent.json"
+      ],
+      "notes": "nono 0.67.1 installed; profile opens localhost ports 4000/11434/8081/8082/4433/8080. Smoke: curl liveliness through sandbox."
+    },
+    {
+      "id": "tau-ai-gateway",
+      "rank": 14,
+      "status": "wired",
+      "paths": [
+        "config/clients/tau.providers.snippet.json",
+        "~/.tau/providers.json"
+      ],
+      "notes": "default_provider=ai-gateway; models manager-fast-turbo/local/reasoning/grok/OR. Credential stored as ai-gateway."
+    },
+    {
+      "id": "manager-embed",
+      "rank": 15,
+      "status": "wired",
+      "paths": [
+        "litellm_config.yaml",
+        "litellm_config.linux.yaml"
+      ],
+      "notes": "manager-embed \u2192 Ollama nomic-embed-text-v2-moe:latest (768 dims) via /v1/embeddings"
+    },
+    {
+      "id": "openwiki-ai-gateway",
+      "rank": 16,
+      "status": "wired_partial",
+      "paths": [
+        "config/clients/openwiki.env.example",
+        "config/clients/openwiki.ai-gateway.provider.ts.snippet",
+        "config/clients/RUNBOOK.md"
+      ],
+      "notes": "Shell OPENAI_BASE_URL + OPENWIKI_PROVIDER=openai + model manager-fast-local works after npm rebuild better-sqlite3. First-class provider snippet still optional."
+    },
+    {
+      "id": "herdr-agent-head",
+      "rank": 0,
+      "status": "wired",
+      "paths": [
+        "config/herdr/herdr.json",
+        "config/herdr/layout.json",
+        "config/herdr/README.md",
+        "scripts/usage_snapshot.sh",
+        "/opt/homebrew/bin/herdr",
+        "~/.config/herdr/herdr.sock",
+        "~/grokcode/integrations/herdr"
+      ],
+      "notes": "Herdr 0.7.x host binary = agent head. Layout: stack/usage/health/agent/grok. Default agents + Grok Build \u2192 localhost:8787/v1 (Headroom). Bypass :4000. usage pane \u2192 scripts/usage_snapshot.sh; spend SoR = LiteLLM UI. Collie optional host install."
+    },
+    {
+      "id": "compose-profile-search-hister",
+      "rank": 17,
+      "status": "wired",
+      "paths": [
+        "docker-compose.yml",
+        "config/clients/hister.semantic_search.snippet.yaml"
+      ],
+      "notes": "profile search: hister image + semantic_search env (nomic via host.docker.internal). Stop standalone hister container before first profile up if name conflicts."
+    },
+    {
+      "id": "headroom-always-on",
+      "rank": 1.1,
+      "status": "wired",
+      "paths": [
+        "docker-compose.yml",
+        "scripts/usage_snapshot.sh",
+        "~/GitHub/headroom"
+      ],
+      "notes": "Always-on headroom-proxy :8787 \u2192 litellm:4000 (no qdrant/neo4j). Open WebUI + agents default here; bypass OPENAI_BASE_URL=http://localhost:4000/v1. Was compose profile compress \u2014 promoted 2026-07."
+    },
+    {
+      "id": "compose-profile-memory-botmem",
+      "rank": 19,
+      "status": "wired",
+      "paths": [
+        "docker-compose.yml",
+        "~/GitHub/botmem"
+      ],
+      "notes": "profile memory: botmem app :12412 healthy (v0.40.x); postgres/redis internal. Personal/life memory SoR (not agent). Local rewrite config/botmem/entrypoint.sh for managed app-latest SPA. Pair with hippo for coding memory. See memory_map.md."
+    },
+    {
+      "id": "hippo-memory",
+      "rank": 19.5,
+      "status": "wired",
+      "paths": [
+        "config/clients/hippo.mcp.snippet.json",
+        "config/clients/memory_map.md",
+        "~/.config/mcp/mcp.json",
+        "~/.config/opencode/opencode.json",
+        "$HOME/.local/bin/hippo",
+        "~/GitHub/hippo-memory"
+      ],
+      "notes": "Agent/coding memory SoR. npm -g hippo-memory; hippo init in ai-gateway + grokcode; MCP: hippo mcp. Local SQLite .hippo/; local embeds default. Dual-layer with botmem \u2014 not a replacement."
+    },
+    {
+      "id": "jcodemunch-mcp",
+      "rank": 18,
+      "status": "wired",
+      "paths": [
+        "config/clients/jcodemunch.mcp.snippet.json",
+        "~/.config/mcp/mcp.json",
+        "~/.config/opencode/opencode.json",
+        "~/.code-index/config.jsonc",
+        "~/GitHub/jcodemunch-mcp"
+      ],
+      "notes": "uvx jcodemunch-mcp; OpenCode mcp.jcodemunch + shared mcpServers for pi/omp (pi-mcp-adapter). Indexed ~/ai-gateway. Prefer absolute path on reindex."
+    },
+    {
+      "id": "agenttrace",
+      "rank": 18.5,
+      "status": "wired",
+      "paths": [
+        "config/herdr/layout.json",
+        "config/herdr/README.md",
+        "/opt/homebrew/bin/agenttrace",
+        "~/GitHub/agenttrace"
+      ],
+      "notes": "brew luoyuctl/tap/agenttrace 0.4.6; Herdr trace pane sibling to usage. Offline multi-agent session forensics; LiteLLM UI remains spend SoR."
+    },
+    {
+      "id": "prompt-io-hybrid",
+      "rank": 18.6,
+      "status": "wired",
+      "paths": [
+        "services/prompt_io/",
+        "scripts/guardrails/hybrid_prompt_io.py",
+        "config/security/README.md"
+      ],
+      "notes": "Profile security: Vigil-compatible scanner :5050 + LiteLLM hybrid_prompt_io; join x-litellm-call-id. PROMPT_IO_ENABLED=1 in .env (on across restarts). Optional llmtrace :8090 shadow."
+    },
+    {
+      "id": "mcp-obsidian",
+      "rank": 20,
+      "status": "wired_partial",
+      "paths": [
+        "config/clients/mcp-obsidian.snippet.json",
+        "~/.config/mcp/mcp.json",
+        "~/.config/opencode/opencode.json",
+        "~/GitHub/mcp-obsidian"
+      ],
+      "notes": "Snippet + host MCP entries present; OpenCode enabled:false until OBSIDIAN_API_KEY + Local REST API plugin. Catalog split: index notes + wikilinks (vault skill)."
+    },
+    {
+      "id": "tiered-orchestration-roles",
+      "rank": 5.55,
+      "status": "wired",
+      "priority": "P1",
+      "manager_module": "infra",
+      "paths": [
+        "litellm_config.yaml",
+        "litellm_config.linux.yaml",
+        "config/clients/RUNBOOK.md",
+        "config/clients/opencode.ai-gateway.snippet.json",
+        "scripts/smoke_role_tiers.sh",
+        "config/herdr/layout.json"
+      ],
+      "notes": "Cloud plan / local execute role aliases (role-plan, role-execute, role-recon, role-phi-local, role-audit, tier-plan-cloud, tier-execute-local). PHI hard-local fallbacks only. Dual-call convention in RUNBOOK; no new orchestrator service for sprint.",
+      "gap": "Optional thin services/orchestrator plan\u2192execute API; HF Spaces burst recon; client host configs (~/.pi) merge roles on demand",
+      "source_rank": "Grok share Agentic Coding with Cloud Planning and Local LLM (d07d2ee7)"
+    }
+  ],
+  "integration_ranking": {
+    "source": "~/GitHub (~350 repos scanned 2026-07-09)",
+    "criteria": [
+      "OpenAI/LiteLLM consumer",
+      "compose profile or host client fit",
+      "complements Open WebUI",
+      "local-first",
+      "M4 24GB RAM",
+      "testing/scaling value"
+    ],
+    "tier_s": [
+      {
+        "id": "herdr",
+        "path": "host:/opt/homebrew/bin/herdr",
+        "role": "agent_head"
+      },
+      {
+        "id": "hister",
+        "path": "~/GitHub/hister",
+        "role": "local_search",
+        "compose_profile": "search"
+      },
+      {
+        "id": "headroom",
+        "path": "~/GitHub/headroom",
+        "role": "context_compression_proxy",
+        "compose_profile": null,
+        "notes": "Always-on core stack; OWUI + agents \u2192 :8787"
+      },
+      {
+        "id": "collie",
+        "path": "~/GitHub/collie",
+        "role": "herdr_mobile_ui",
+        "compose_profile": null
+      },
+      {
+        "id": "gollama",
+        "path": "~/GitHub/gollama",
+        "role": "ollama_tui_host"
+      }
+    ],
+    "tier_a": [
+      {
+        "id": "botmem",
+        "path": "~/GitHub/botmem",
+        "compose_profile": "memory",
+        "notes": "Personal/life memory SoR; pair with hippo for agents"
+      },
+      {
+        "id": "hippo-memory",
+        "path": "~/GitHub/hippo-memory",
+        "notes": "wired \u2014 agent/coding memory SoR + MCP"
+      },
+      {
+        "id": "agenttrace",
+        "path": "~/GitHub/agenttrace",
+        "notes": "wired \u2014 Herdr trace pane"
+      },
+      {
+        "id": "jcodemunch-mcp",
+        "path": "~/GitHub/jcodemunch-mcp",
+        "notes": "wired \u2014 OpenCode + ~/.config/mcp/mcp.json"
+      },
+      {
+        "id": "token-optimizer",
+        "path": "~/GitHub/token-optimizer"
+      },
+      {
+        "id": "mcp-obsidian",
+        "path": "~/GitHub/mcp-obsidian",
+        "notes": "wired_partial \u2014 enable after Local REST API key"
+      },
+      {
+        "id": "hermes-agent",
+        "path": "~/GitHub/hermes-agent",
+        "notes": "Local default: custom:ai-gateway \u2192 Headroom :8787 \u2192 LiteLLM. config.yaml + LITELLM_MASTER_KEY in ~/.hermes/.env. Do not make second gateway. Smoke: hermes -z ping -m manager-fast-turbo --provider custom:ai-gateway"
+      },
+      {
+        "id": "understand-anything",
+        "path": "~/GitHub/Understand-Anything",
+        "notes": "Knowledge graph / codebase map; efficiency via structure not token compress. Pair with jcodemunch + manager-embed. Capacity cost: multi-agent LLM index build."
+      },
+      {
+        "id": "turnstone-pi-tau-nono-openwiki",
+        "notes": "Already client-wired"
+      }
+    ],
+    "tier_b": [
+      {
+        "id": "distill",
+        "notes": "Deferred agent-context pipeline \u2014 optional third layer; not life or primary agent SoR"
+      },
+      "cognee",
+      "loreai",
+      "mem0",
+      "khoj",
+      "anything-llm",
+      "ragflow",
+      "OpenHands",
+      "open-interpreter",
+      "deer-flow",
+      "browser-use",
+      "langflow",
+      "meetily"
+    ],
+    "tier_c_defer": [
+      "heretic",
+      "conductor",
+      "domain IPTV/cannabis/hardware scrapers",
+      "one-off MCP servers until a workflow needs them"
+    ]
+  },
+  "earmarked": [
+    {
+      "id": "unraid-deploy",
+      "rank": 1,
+      "status": "earmarked",
+      "priority": "P0",
+      "manager_module": "infra",
+      "paths": [
+        "docker-compose.linux.yml",
+        "scripts/docker/compose.sh"
+      ],
+      "gap": "Compose overlay + host profile for Unraid amd64; Ollama on LAN IP not host.docker.internal",
+      "source_rank": "MANAGER Integration Ranking \u2014 sovereign local-first infra"
+    },
+    {
+      "id": "unraid-fast-models",
+      "rank": 1.2,
+      "status": "active",
+      "priority": "P0",
+      "manager_module": "infra",
+      "paths": [
+        "deploy/unraid-fast-models/docker-compose.yml",
+        "deploy/unraid-fast-models/Dockerfile",
+        "deploy/unraid-fast-models/entrypoint.sh",
+        "deploy/unraid-fast-models/README.md",
+        "deploy/unraid-fast-models/patches/bees-musl-gettid.patch"
+      ],
+      "gap": "bees v0.11 + musl gettid patch + hash bootstrap; NFS still host-owned (ENABLE_NFS=0 until Unraid NFS off)",
+      "source_rank": "Option A dual NVMe + bees + NFS v4.2 device-bound storage plane"
+    },
+    {
+      "id": "aida-document-pipeline",
+      "rank": 1.8,
+      "status": "wired_partial",
+      "priority": "P0",
+      "manager_module": "A.I.D.A.",
+      "paths": [
+        "services/aida/",
+        "scripts/start_aida.sh",
+        "scripts/aida_drop_once.py",
+        "docker-compose.yml"
+      ],
+      "gap": "veraPDF host/Docker on arm64 still optional (heuristics fallback); HITL NVDA/JAWS checklist; MCP /tools/aida_* in grokcode TODO 2b; full J.E.S.U.S. handoff remains in MANAGER",
+      "source_rank": "Weekend shit-test: watch folder + OCR + dual briefs + PDF/UA for medical/PDF ingest parity with MANAGER A.I.D.A.",
+      "notes": "Host preferred :8792; profile aida compose; PHI defaults tier-local-fast; NFS default /Volumes/ai-data/work/ingest"
+    },
+    {
+      "id": "otel-litellm-dashboards",
+      "rank": 2,
+      "status": "earmarked",
+      "priority": "P1",
+      "manager_module": "observability",
+      "paths": [
+        "prometheus.yml",
+        "docker-compose.yml",
+        "config/observability/prompt-io-dashboard.json"
+      ],
+      "gap": "Full OTel collector + Tempo still open; LiteLLM /metrics + prompt-io Prometheus/Grafana board scaffolded",
+      "source_rank": "MANAGER metrics \u2192 OTel + Grafana/Prometheus share"
+    },
+    {
+      "id": "hybrid-llmtrace-vigil",
+      "rank": 2.1,
+      "status": "wired",
+      "priority": "P1",
+      "manager_module": "observability",
+      "paths": [
+        "scripts/guardrails/hybrid_prompt_io.py",
+        "services/prompt_io/",
+        "config/security/",
+        "config/observability/prompt-io-dashboard.json",
+        "litellm_config.yaml",
+        "docker-compose.yml",
+        "prometheus.yml",
+        ".env"
+      ],
+      "gap": "Optional: PROMPT_IO_VIGIL_UPSTREAM full deadbits/vigil-llm; LLMTrace shadow image pull; Grafana import of prompt-io-dashboard.json; OTel collector still open under otel-litellm-dashboards",
+      "source_rank": "LLM Log IDS via LiteLLM Guardrails + hybrid parallel llmtrace/vigil share",
+      "notes": "PROMPT_IO_ENABLED=1 persisted in .env; prompt-io :5050 + LiteLLM guardrails join on x-litellm-call-id; fail-open"
+    },
+    {
+      "id": "manager-litellm-bridge",
+      "rank": 3,
+      "status": "earmarked",
+      "priority": "P1",
+      "manager_module": "mcp_router",
+      "paths": [
+        "litellm_config.yaml"
+      ],
+      "gap": "Point grokcode orchestrator LiteLLM base at ai-gateway:4000 on LAN (pi agent already on localhost:4000)",
+      "source_rank": "Hybrid stack \u2014 LiteLLM as shared inference bus"
+    },
+    {
+      "id": "whisper-stt-sidecar",
+      "rank": 4,
+      "status": "earmarked",
+      "priority": "P2",
+      "manager_module": "audio",
+      "paths": [],
+      "gap": "whisper.cpp / faster-whisper Metal (Mac) or CUDA (PopOS) route via LiteLLM or Open WebUI tool",
+      "source_rank": "Integration Ranking Tier 1 \u2014 Trace on-device transcripts (open alt)"
+    },
+    {
+      "id": "glm-ocr-translategemma",
+      "rank": 5,
+      "status": "earmarked",
+      "priority": "P2",
+      "manager_module": "multimodal",
+      "paths": [
+        "litellm_config.yaml",
+        "scripts/ollama_staged_plan.json"
+      ],
+      "gap": "Stage 2 Ollama pulls wired as manager-ocr-local / manager-translate-el; smoke on both hosts",
+      "source_rank": "ai-gateway staged Ollama specialists session"
+    },
+    {
+      "id": "litellm-tier-router",
+      "rank": 5.5,
+      "status": "wired",
+      "priority": "P1",
+      "manager_module": "infra",
+      "paths": [
+        "litellm_config.yaml",
+        "litellm_config.linux.yaml",
+        "scripts/check_litellm_routes.py"
+      ],
+      "gap": "Retries/cooldown/tier aliases done; optional Redis response cache still deferred on M4 24GB",
+      "source_rank": "Best-of Grok M4 + Studio fabric + LiteLLM best practice"
+    },
+    {
+      "id": "remote-vllm-tier",
+      "rank": 5.6,
+      "status": "earmarked",
+      "priority": "P2",
+      "manager_module": "infra",
+      "paths": [
+        "litellm_config.linux.yaml",
+        "config/hosts/linux.env"
+      ],
+      "gap": "manager-fast-cuda / manager-heavy-cuda stubs need live VLLM_API_BASE or TURBOQUANT_CUDA_API_BASE on PopOS/Unraid",
+      "source_rank": "Mac Studio share heterogeneous fabric + Integration Ranking P2000/4060"
+    },
+    {
+      "id": "mlx-litellm-sidecar",
+      "rank": 5.7,
+      "status": "wired",
+      "priority": "P3",
+      "manager_module": "infra",
+      "paths": [
+        "config/hosts/mac.env",
+        "litellm_config.yaml",
+        "docker-compose.mac.yml",
+        "scripts/start_lmstudio_server.sh",
+        "scripts/load_lmstudio_model.sh",
+        "scripts/stop_lmstudio_server.sh",
+        "config/clients/RUNBOOK.md"
+      ],
+      "notes": "LM Studio Developer Server :1234 (OpenAI). LiteLLM: manager-mlx-fast (google/gemma-3n-e4b), manager-lms-local (qwen/qwen3.5-9b), manager-lms-vision (google/gemma-4-e4b), tier-local-mlx. Auth LM_API_TOKEN. Load via lms / scripts/load_lmstudio_model.sh. M4 24GB: one large model; do not default 27B/30B/35B.",
+      "gap": "Optional pure mlx_lm.server outside LMS only if LMS fails for a specific MLX model",
+      "source_rank": "Mac Studio share MLX on M4 Mini"
+    },
+    {
+      "id": "manager-vision-embed",
+      "rank": 5.8,
+      "status": "wired",
+      "priority": "P3",
+      "manager_module": "multimodal",
+      "paths": [
+        "services/vision_embed/app.py",
+        "services/vision_embed/README.md",
+        "scripts/start_vision_embed.sh",
+        "scripts/stop_vision_embed.sh",
+        "litellm_config.yaml",
+        "litellm_config.linux.yaml",
+        "docker-compose.yml",
+        "config/clients/RUNBOOK.md",
+        "config/hosts/mac.env"
+      ],
+      "notes": "FastAPI :8791 + LiteLLM alias manager-vision-embed (openai/ \u2192 host.docker.internal:8791/v1). Chat facade returns feature JSON (not VLM captions). VLM chat: manager-vision-local / manager-gemini-vision; OCR: manager-ocr-local.",
+      "gap": "Optional: LingBot MLX Swift or CoreML ONNX backend (VISION_EMBED_BACKEND=external); MCP wrapper for agents; Hister image-RAG consumer.",
+      "source_rank": "ai-gateway vision stack triage \u2014 GGUF VLM vs ViT/MLX encoder separation 2026-07"
+    },
+    {
+      "id": "supabase-self-hosted-bridge",
+      "rank": 6,
+      "status": "earmarked",
+      "priority": "P3",
+      "manager_module": "jesus_memory",
+      "paths": [],
+      "gap": "Optional Postgres/pgvector on Unraid; ai-gateway stays stateless proxy",
+      "source_rank": "MANAGER Supabase self-hosted recon"
+    },
+    {
+      "id": "kage-offline-archive",
+      "rank": 7,
+      "status": "earmarked",
+      "priority": "P3",
+      "manager_module": "ingest",
+      "paths": [],
+      "gap": "Archive grok exports + compliance docs to static mirrors for air-gap",
+      "source_rank": "Integration Ranking Tier 1 \u2014 tamnd/kage"
+    },
+    {
+      "id": "session-prune-cron",
+      "rank": 8,
+      "status": "wired",
+      "priority": "P0",
+      "manager_module": "devops",
+      "paths": [
+        "scripts/prune_grok_sessions.py"
+      ],
+      "gap": "Run after major sessions; prevents Grok context token bloat",
+      "source_rank": "Clean Bloated Sessions session (grokcode pattern)"
+    },
+    {
+      "id": "hister-mcp-agents",
+      "rank": 10,
+      "status": "wired",
+      "priority": "P1",
+      "manager_module": "search",
+      "paths": [
+        "config/clients/hister.semantic_search.snippet.yaml",
+        "config/clients/hister.mcp.snippet.json",
+        "docker-compose.yml",
+        "~/.config/mcp/mcp.json",
+        "~/.config/opencode/opencode.json"
+      ],
+      "gap": "Optional: Turnstone mcp.json + Open WebUI tools entry; index vault/local files for non-empty semantic search",
+      "notes": "Compose profile search live; MCP initialize reports semanticSearchEnabled=true; clients registered OpenCode + shared mcp.json",
+      "source_rank": "Hister AI enhanced MCP + semantic search"
+    },
+    {
+      "id": "understand-anything-indexes",
+      "rank": 11,
+      "status": "earmarked",
+      "priority": "P2",
+      "manager_module": "code_map",
+      "paths": [
+        "~/GitHub/Understand-Anything",
+        "setup-claude-code.sh"
+      ],
+      "gap": "On-demand index ai-gateway then grokcode when structural maps needed; use manager-fast-local / manager-understand-audit; avoid dual TQ OOM on M4",
+      "source_rank": "Tier A Understand-Anything \u2014 pair with jcodemunch"
+    },
+    {
+      "id": "memory-platform-botmem",
+      "rank": 12,
+      "status": "wired_partial",
+      "priority": "P1",
+      "manager_module": "jesus_memory",
+      "paths": [
+        "config/clients/memory_platform.md",
+        "config/clients/memory_map.md",
+        "config/botmem/entrypoint.sh",
+        "docker-compose.yml"
+      ],
+      "gap": "User: clear Brave site data for localhost:12412; email/password register+login; Phase A connectors; optional botmem MCP in clients",
+      "notes": "Personal/life SoR kept. Dual with hippo (agent). Local SPA rewrite retained until self-built app image. Ollama AI_BACKEND forced.",
+      "source_rank": "Tier A botmem + dual-layer with hippo 2026-07-17"
+    },
+    {
+      "id": "memory-platform-hippo",
+      "rank": 12.5,
+      "status": "wired",
+      "priority": "P1",
+      "manager_module": "agent_memory",
+      "paths": [
+        "config/clients/hippo.mcp.snippet.json",
+        "config/clients/memory_map.md",
+        ".hippo/"
+      ],
+      "gap": "Optional: hippo init --scan for more repos; sleep schedule; agent hooks",
+      "notes": "Agent/coding SoR wired 2026-07-17; MCP hippo mcp in OpenCode + ~/.config/mcp/mcp.json",
+      "source_rank": "Tier A dual-memory expansion"
+    }
+  ],
+  "deferred_manager_only": [
+    "khadas-yolov8n-vision",
+    "open-interpreter-orchestrator",
+    "google-calendar-mcp",
+    "lean-agent-safety",
+    "zeroserve-ebpf-front"
+  ]
+}

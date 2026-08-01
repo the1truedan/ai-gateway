@@ -1,0 +1,11 @@
+providers:
+  nas-host-headroom:
+    type: openai
+    base_url: http://<nas-host-ip>:8787/v1
+    api_key_env: LITELLM_MASTER_KEY
+    models:
+      - role-auto
+      - role-execute
+      - role-phi-local
+      - tier-codex-cloud
+      - tier-mimo-cloud

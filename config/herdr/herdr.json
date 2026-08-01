@@ -1,0 +1,37 @@
+{
+  "enabled": true,
+  "binary": "herdr",
+  "session": null,
+  "socket_path": null,
+  "workspace_cwd": "$HOME/ai-gateway",
+  "workspace_label": "ai-gateway",
+  "use_python_client": false,
+  "layout_file": "config/herdr/layout.json",
+  "default_panes": ["stack", "usage", "health", "agent", "grok"],
+  "inference_base_url": "http://localhost:8787/v1",
+  "inference_bypass_url": "http://localhost:4000/v1",
+  "preferred_model": "manager-fast-turbo",
+  "recommended_model": "role-execute",
+  "gpu_host_base_url": "http://<gpu-host-ip>:8787/v1",
+  "gpu_host_accelerated_models": ["tier-nvidia-fast", "tier-nvidia-reason"],
+  "non_phi_cloud_option": "tier-codex-cloud",
+  "orchestration_roles": {
+    "plan": "role-plan",
+    "execute": "role-execute",
+    "recon": "role-recon",
+    "phi": "role-phi-local",
+    "reason": "role-reason",
+    "audit": "role-audit",
+    "note": "Cloud plans; local executes; PHI never leaves local. Recommend role-execute for new work; compatibility default stays manager-fast-turbo."
+  },
+  "install_hint": "brew install herdr  # or: curl -fsSL https://herdr.dev/install.sh | sh",
+  "license_note": "AGPL-3.0 — local agent multiplexer only; not a model gateway",
+  "architecture": {
+    "agent_head": "herdr",
+    "token_conservation": "headroom :8787",
+    "inference_head": "litellm :4000",
+    "chat_surface": "open-webui → headroom → litellm",
+    "spend_ui": "litellm admin ui :4000/ui",
+    "mobile_ui": "collie (optional, Tailscale serve only)"
+  }
+}

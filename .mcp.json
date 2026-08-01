@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "jcodemunch": {
+      "command": "uvx",
+      "args": ["jcodemunch-mcp"],
+      "lifecycle": "lazy",
+      "requestTimeoutMs": 120000
+    },
+    "hister": {
+      "url": "http://<gpu-host-ip>:4433/mcp",
+      "lifecycle": "lazy"
+    }
+  }
+}

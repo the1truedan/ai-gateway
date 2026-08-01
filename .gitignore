@@ -1,0 +1,14 @@
+.env
+litellm_data/
+openrouter_free_models.generated.yaml
+import-data/
+*.log
+services/vision_embed/.venv/
+__pycache__/
+*.pyc
+.hippo/
+
+.DS_Store
+**/.DS_Store
+.aider.chat.history.md
+.aider.input.history

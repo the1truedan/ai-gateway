@@ -1,0 +1,136 @@
+# Overlay for PopOS / Unraid (amd64). Ollama is containerized (see `ollama`
+# service below) and reached by container name on the ai-gateway network —
+# OLLAMA_HOST_IP is no longer used for this.
+services:
+  litellm:
+    environment:
+      # Cut over 2026-07-27: ollama is now containerized on this same
+      # ai-gateway network (see the `ollama` service below), so route by
+      # container name — going through the host's own external IP
+      # (OLLAMA_HOST_IP=<gpu-host-ip>) to reach another container's published
+      # port on the same host hit classic Linux Docker hairpin-NAT and hung
+      # every request. Host ollama.service is stopped+disabled.
+      - OLLAMA_API_BASE=http://ollama:11434
+      - TURBOQUANT_ORCH_API_BASE=http://${TURBOQUANT_HOST_IP:-host.docker.internal}:8081/v1
+      - TURBOQUANT_CODER_API_BASE=http://${TURBOQUANT_HOST_IP:-host.docker.internal}:8082/v1
+      - VISION_EMBED_API_BASE=http://${VISION_EMBED_HOST_IP:-host.docker.internal}:8791/v1
+      # NEW LAW: gpu-host may use cloud compute (mock-tua overflow, free/paid explicit).
+      # Keys from host .env via compose env_file — never commit secrets.
+      # PHI still gated by orchestrator (manager-phi-local never cloud).
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - XAI_API_KEY=${XAI_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_FREE_API_KEY=${GEMINI_FREE_API_KEY:-}
+      - MIMO_API_KEY=${MIMO_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - HF_TOKEN=${HF_TOKEN:-}
+      - DARKBLOOM_API_KEY=${DARKBLOOM_API_KEY:-}
+      - DATABASE_URL=postgresql://llmproxy:${LITELLM_DB_PASSWORD:-litellm_local_db}@litellm-db:5432/litellm
+    volumes:
+      # Prefer merged worker+free+paid config (render_linux_litellm_config.py / push_gateway_nodes)
+      - ./${LITELLM_CONFIG_FILE:-litellm_config.linux.yaml}:/app/config.yaml:ro
+      - ./openrouter_free_models.generated.yaml:/app/openrouter_free_models.generated.yaml:ro
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/uv-cache:/shared/cache/uv
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/models:/shared/models:ro
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/codebase-mirror:/shared/code:ro
+    depends_on:
+      litellm-db:
+        condition: service_healthy
+
+  litellm-db:
+    image: postgres:16
+    container_name: litellm-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: litellm
+      POSTGRES_USER: llmproxy
+      POSTGRES_PASSWORD: ${LITELLM_DB_PASSWORD:-litellm_local_db}
+    expose:
+      - "5432"
+    volumes:
+      - litellm-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d litellm -U llmproxy"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - ai-gateway
+
+  # Open WebUI is nas-host-only (http://<nas-host-ip>:3001). Do not run chat UI on gpu-host.
+  # profiles keeps the base service definition from starting on linux workers.
+  open-webui:
+    profiles: ["open-webui-disabled"]
+    ports: !reset []
+    restart: "no"
+
+  openwebui-importer:
+    profiles: ["import"]
+    platform: linux/amd64
+
+  headroom:
+    environment:
+      - OPENAI_TARGET_API_URL=${HEADROOM_OPENAI_TARGET:-http://<mac-client-ip>:8790/v1}
+      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
+      - ANTHROPIC_TARGET_API_URL=${HEADROOM_ANTHROPIC_TARGET:-http://<mac-client-ip>:8790}
+      - ANTHROPIC_API_KEY=${LITELLM_MASTER_KEY}
+      - HEADROOM_NO_SUBSCRIPTION_TRACKING=1
+
+  # Run Turnstone natively on the gpu-host amd64 host. Requests still traverse
+  # Mac Headroom + the central orchestrator; tier-nvidia-fast deterministically
+  # returns inference to this host's CUDA-backed worker LiteLLM/Ollama.
+  turnstone:
+    environment:
+      - LLM_BASE_URL=http://<mac-client-ip>:8787/v1
+      - OPENAI_BASE_URL=http://<mac-client-ip>:8787/v1
+      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
+      - MODEL=${TURNSTONE_MODEL:-manager-auto}
+      - TURNSTONE_NODE_ID=${TURNSTONE_NODE_ID:-gpu-host-turnstone}
+      - TURNSTONE_ADVERTISE_URL=${TURNSTONE_ADVERTISE_URL:-http://turnstone:8080}
+    volumes:
+      - turnstone-data:/data
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/work/turnstone:/workspace
+
+  # Containerized Ollama for gpu-host (RTX 4060 Ti), replacing the host-native
+  # binary — see docs/operations/QQQ_CODING_ORCHESTRATION.md / plan "Part D".
+  # Requires nvidia-container-toolkit (shared prerequisite with Comfy's own
+  # containerization earmark — see mock-tua/README.md). Not started by default
+  # merge; bring up explicitly with `docker compose -f docker-compose.yml
+  # -f docker-compose.linux.yml up -d ollama` and verify `ollama list` matches
+  # the host-native instance before cutting worker LiteLLM over to it.
+  ollama:
+    image: ollama/ollama:latest
+    container_name: gpu-host-ollama
+    restart: unless-stopped
+    # Cut over 2026-07-27: verified model list matches host-native (superset,
+    # actually — same shared store) + real GPU inference test passed (92%
+    # util, 7.3s eval). Bind-mounts the REAL model store (confirmed via
+    # `systemctl show ollama` + `du -sh`), not a fresh named volume — avoids
+    # re-pulling ~42G of already-downloaded models. Host-native ollama.service
+    # is stopped+disabled; this container now owns 11434.
+    #
+    # $HOME/.ollama/models is itself a symlink to the shared ai-data NFS
+    # export (/mnt/ai-data/models/llms/ollama, same share-symlink pattern used
+    # for skills/hister elsewhere in this repo) — the target must be mounted
+    # at the SAME absolute path too, or the symlink dangles inside the
+    # container's mount namespace ("mkdir ...: file exists: ensure path
+    # elements are traversable").
+    ports:
+      - "${OLLAMA_CONTAINER_PORT:-11434}:11434"
+    volumes:
+      - ${OLLAMA_HOST_DATA_DIR:-$HOME/.ollama}:/root/.ollama
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/models/llms/ollama:/mnt/ai-data/models/llms/ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - ai-gateway
+
+volumes:
+  litellm-postgres-data:

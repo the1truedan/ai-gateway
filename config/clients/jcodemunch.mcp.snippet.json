@@ -1,0 +1,27 @@
+{
+  "_doc": "jCodeMunch MCP — token-efficient AST code retrieval. Clone: ~/GitHub/jcodemunch-mcp. Install: uvx jcodemunch-mcp. Config: ~/.code-index/config.jsonc",
+  "opencode": {
+    "mcp": {
+      "jcodemunch": {
+        "type": "local",
+        "command": ["uvx", "jcodemunch-mcp"],
+        "enabled": true
+      }
+    }
+  },
+  "mcpServers_shared": {
+    "jcodemunch": {
+      "command": "uvx",
+      "args": ["jcodemunch-mcp"],
+      "lifecycle": "lazy",
+      "requestTimeoutMs": 120000
+    }
+  },
+  "_pi_omp": "Pi (and Oh My Pi when sharing pi-mcp-adapter) read ~/.config/mcp/mcp.json or project .mcp.json. Prefer user-global ~/.config/mcp/mcp.json so pi + omp both see jcodemunch.",
+  "_index": [
+    "cd ~/ai-gateway && uvx jcodemunch-mcp index .",
+    "cd ~/grokcode && uvx jcodemunch-mcp index .",
+    "uvx jcodemunch-mcp list-repos"
+  ],
+  "_smoke": "In OpenCode/pi: list jcodemunch tools, then fetch a known symbol (e.g. usage_snapshot path) without full-file read."
+}

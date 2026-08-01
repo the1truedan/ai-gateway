@@ -1,0 +1,28 @@
+{
+  "providers": {
+    "gpu-host-headroom": {
+      "baseUrl": "http://localhost:8787/v1",
+      "api": "openai-completions",
+      "apiKey": "$LITELLM_MASTER_KEY",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false
+      },
+      "models": [
+        { "id": "role-auto", "name": "Automatic best-fit local host", "contextWindow": 131072, "maxTokens": 32768 },
+        { "id": "role-execute", "name": "gpu-host execute (NVIDIA)", "contextWindow": 131072, "maxTokens": 32768 },
+        { "id": "role-reason", "name": "gpu-host reason (NVIDIA)", "contextWindow": 131072, "maxTokens": 32768 },
+        { "id": "tier-nvidia-fast", "name": "gpu-host Qwen 3.5 9.7B (CUDA tools)", "contextWindow": 131072, "maxTokens": 32768 },
+        { "id": "tier-nvidia-agent", "name": "gpu-host Gemma 4 12B (agent fallback)", "contextWindow": 32768, "maxTokens": 16384 },
+        { "id": "tier-nvidia-reason", "name": "gpu-host DeepSeek R1 14B", "contextWindow": 32768, "maxTokens": 16384 },
+        { "id": "role-plan", "name": "Local planning" },
+        { "id": "tier-codex-cloud", "name": "OpenAI GPT-5.6 Terra (non-PHI)" },
+        { "id": "role-phi-local", "name": "PHI local only", "contextWindow": 131072, "maxTokens": 32768 },
+        { "id": "tier-gemini-free", "name": "Cloud Gemini (explicit)" },
+        { "id": "tier-free-cloud", "name": "Cloud OpenRouter free (explicit)" },
+        { "id": "tier-mimo-cloud", "name": "Cloud MiMo (explicit)" },
+        { "id": "tier-grok-cloud", "name": "Cloud Grok API (explicit)" }
+      ]
+    }
+  }
+}

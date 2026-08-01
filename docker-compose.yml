@@ -1,0 +1,594 @@
+services:
+  capacity-agent:
+    build:
+      context: .
+      dockerfile: services/capacity_agent/Dockerfile
+    image: manager-capacity-agent:local
+    container_name: capacity-agent
+    restart: unless-stopped
+    environment:
+      CAPACITY_AGENT_HOST_ID: ${AI_GATEWAY_HOST_PROFILE:-local}
+      CAPACITY_AGENT_HOST: 0.0.0.0
+      CAPACITY_AGENT_PORT: 8794
+      CAPACITY_AGENT_TOKEN: ${LITELLM_MASTER_KEY}
+      CAPACITY_MAX_INFLIGHT: 2
+    ports:
+      - "8794:8794"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8794/healthz')\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai-gateway
+
+  # Postgres for LiteLLM Admin UI, virtual keys, users, spend.
+  # Internal only — do not publish host :5432 (avoids clash with host/Botmem).
+  litellm-db:
+    image: postgres:16
+    container_name: litellm-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: litellm
+      POSTGRES_USER: llmproxy
+      POSTGRES_PASSWORD: ${LITELLM_DB_PASSWORD:-litellm_local_db}
+    expose:
+      - "5432"
+    volumes:
+      - litellm-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d litellm -U llmproxy"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - ai-gateway
+
+  litellm:
+    image: ${LITELLM_IMAGE:-ghcr.io/berriai/litellm@sha256:0f0a2e85b3771af16074117d9054cc43830f27d20ef7a0fa7908594f59a8dbc0}
+    container_name: litellm-proxy
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml:ro
+      - ./openrouter_free_models.generated.yaml:/app/openrouter_free_models.generated.yaml:ro
+      - ./scripts:/app/scripts:ro
+      - ./scripts/guardrails/hybrid_prompt_io.py:/app/hybrid_prompt_io.py:ro
+      - ./litellm_data:/app/data
+    env_file:
+      - .env
+    environment:
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      - LITELLM_SALT_KEY=${LITELLM_SALT_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - XAI_API_KEY=${XAI_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_FREE_API_KEY=${GEMINI_FREE_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - HF_TOKEN=${HF_TOKEN:-}
+      - DARKBLOOM_API_KEY=${DARKBLOOM_API_KEY:-}
+      - AKASHML_API_KEY=${AKASHML_API_KEY:-}
+      - SALAD_API_KEY=${SALAD_API_KEY:-}
+      - MIMO_API_BASE=${MIMO_API_BASE:-https://api.xiaomimimo.com/v1}
+      - MIMO_API_KEY=${MIMO_API_KEY:-}
+      - DATABASE_URL=postgresql://llmproxy:${LITELLM_DB_PASSWORD:-litellm_local_db}@litellm-db:5432/litellm
+      # Hybrid parallel prompt I/O (profile security: prompt-io service)
+      - PROMPT_IO_BASE=${PROMPT_IO_BASE:-http://prompt-io:5050}
+      - PROMPT_IO_TIMEOUT=${PROMPT_IO_TIMEOUT:-0.5}
+      # Persist via .env PROMPT_IO_ENABLED=1 (default on). Needs profile security prompt-io.
+      # Fail-open: if prompt-io is down, scans timeout quickly and requests still succeed.
+      - PROMPT_IO_ENABLED=${PROMPT_IO_ENABLED:-1}
+      - PROMPT_IO_BLOCK=${PROMPT_IO_BLOCK:-0}
+    entrypoint: ["/bin/sh", "/app/scripts/start_litellm.sh"]
+    restart: unless-stopped
+    depends_on:
+      litellm-db:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:4000/health/liveliness')\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      - ai-gateway
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    ports:
+      - "8080:8080"
+    volumes:
+      - open-webui-data:/app/backend/data
+    env_file:
+      - .env
+    environment:
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      # Token conservation path: OWUI → Headroom → LiteLLM (bypass: http://litellm:4000/v1)
+      - OPENAI_API_BASE_URL=${OPENWEBUI_OPENAI_BASE:-http://headroom:8787/v1}
+      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
+    depends_on:
+      litellm:
+        condition: service_healthy
+      headroom:
+        condition: service_started
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - ai-gateway
+
+  catalog-sync:
+    build:
+      context: .
+      dockerfile: services/catalog/Dockerfile
+    image: manager-catalog-sync:local
+    container_name: manager-catalog-sync
+    profiles: ["sync"]
+    volumes:
+      - manager-catalog-state:/state
+    env_file:
+      - .env
+    environment:
+      - CATALOG_SYNC_INTERVAL_SECONDS=86400
+    command: ["/app/catalog_sync_loop.sh"]
+    restart: unless-stopped
+    networks:
+      - ai-gateway
+
+  # Optional single-node Turnstone coding agent. Its OpenAI-compatible traffic
+  # follows the token-conservation path: Turnstone -> Headroom -> LiteLLM /
+  # orchestrator -> selected worker (role-auto considers gpu-host, mac-client, nas-host).
+  # Start with: ./scripts/docker/compose.sh --profile turnstone up -d turnstone
+  turnstone:
+    image: ghcr.io/turnstonelabs/turnstone:stable
+    # Upstream stable currently publishes amd64 only; Docker Desktop emulates
+    # this control-plane container on Apple Silicon. LLM inference remains on
+    # the orchestrated workers rather than consuming the M4 CPU/GPU locally.
+    platform: linux/amd64
+    container_name: turnstone
+    profiles: ["turnstone"]
+    command:
+      - sh
+      - -c
+      - >-
+        turnstone-server --host 0.0.0.0 --port 8080
+        --base-url "$${LLM_BASE_URL}" --api-key "$${OPENAI_API_KEY}"
+        --model "$${MODEL}"
+    ports:
+      - "${TURNSTONE_PORT:-8090}:8080"
+    volumes:
+      - turnstone-data:/data
+      - turnstone-workspace:/workspace
+    environment:
+      - LLM_BASE_URL=http://headroom:8787/v1
+      - OPENAI_BASE_URL=http://headroom:8787/v1
+      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
+      - MODEL=${TURNSTONE_MODEL:-manager-auto}
+      - TURNSTONE_JWT_SECRET=${TURNSTONE_JWT_SECRET}
+      - TURNSTONE_NODE_ID=${TURNSTONE_NODE_ID:-mac-client-turnstone}
+      - TURNSTONE_ADVERTISE_URL=${TURNSTONE_ADVERTISE_URL:-http://turnstone:8080}
+      - TURNSTONE_SEARXNG_URL=${TURNSTONE_SEARXNG_URL:-}
+    depends_on:
+      headroom:
+        condition: service_started
+      litellm:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "/usr/local/bin/healthcheck.py", "http://127.0.0.1:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - ai-gateway
+
+  # One-shot / manual: import grokhistory + grokcode into Open WebUI
+  #   ./scripts/docker/compose.sh --profile import run --rm openwebui-importer --all
+  #   ./scripts/import/run_openwebui_import.sh --all --apply   # native on arm64 Mac
+  openwebui-importer:
+    build:
+      context: ./scripts/import
+      dockerfile: Dockerfile
+    image: ai-gateway-openwebui-importer:local
+    container_name: openwebui-importer
+    profiles: ["import"]
+    working_dir: /app
+    volumes:
+      - ./import-data:/data
+      - ${GROK_SESSIONS_DIR:-${HOME}/.grok/sessions}:/grok-sessions:ro
+      - ${GROK_HISTORY_EXPORT_DIR:-${HOME}/Downloads/ttl}:/grok-history:ro
+      - open-webui-data:/webui-data
+    env_file:
+      - .env
+    environment:
+      - OPENWEBUI_IMPORT_IN_CONTAINER=1
+      - OPENWEBUI_IMPORT_ROOT=/app
+      - OPENWEBUI_IMPORT_DATA_DIR=/data
+      - GROK_SESSIONS_DIR=/grok-sessions
+      - GROK_HISTORY_EXPORT_DIR=/grok-history
+      - OPENWEBUI_GROK_MODEL=manager-grok-paid
+    networks:
+      - ai-gateway
+
+  # ---------------------------------------------------------------------------
+  # Core path: Open WebUI / agents → Headroom :8787 → LiteLLM :4000
+  # Optional profiles (keep default stack lean beyond Headroom):
+  #   search   — Hister local search :4433
+  #   memory   — Botmem personal memory :12412
+  #   vision   — manager-vision-embed FastAPI
+  #   aida     — A.I.D.A. document watch-folder + OCR + dual briefs
+  #   import / sync — history import + OpenRouter free catalog
+  #
+  # Examples:
+  #   ./scripts/docker/compose.sh up -d                 # includes Headroom
+  #   ./scripts/docker/compose.sh --profile search up -d
+  #   ./scripts/docker/compose.sh --profile memory up -d
+  #   ./scripts/docker/compose.sh --profile aida up -d --build
+  # If Hister already runs outside this compose (container name hister), stop it first.
+  # Bypass Headroom (raw LiteLLM): OPENAI_BASE_URL=http://localhost:4000/v1
+  # ---------------------------------------------------------------------------
+
+  hister:
+    image: ghcr.io/asciimoo/hister:latest
+    container_name: hister
+    profiles: ["search"]
+    init: true
+    restart: unless-stopped
+    read_only: true
+    # Explicit config so indexer.directories (Atuin export) always loads
+    command: ["listen", "--config", "/hister/config.yml"]
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - "4433:4433"
+    volumes:
+      - hister-data:/hister/data
+      # Local-only Atuin export (redacted shell history markdown) for type:local search
+      - ./import-data/staging/dev-history:/data/dev-history:ro
+      - ./config/hister/config.yml:/hister/config.yml:ro
+    tmpfs:
+      - /tmp:noexec,nosuid,size=64m
+    environment:
+      - HISTER__SERVER__ADDRESS=0.0.0.0:4433
+      - HISTER__SERVER__BASE_URL=http://localhost:4433
+      # Semantic search via host Ollama nomic (768d). Prefer LiteLLM manager-embed by setting:
+      #   HISTER__SEMANTIC_SEARCH__EMBEDDING_ENDPOINT=http://litellm:4000/v1/embeddings
+      #   HISTER__SEMANTIC_SEARCH__EMBEDDING_MODEL=manager-embed
+      #   HISTER__SEMANTIC_SEARCH__API_KEY=${LITELLM_MASTER_KEY}
+      - HISTER__SEMANTIC_SEARCH__ENABLE=${HISTER_SEMANTIC_SEARCH_ENABLE:-true}
+      - HISTER__SEMANTIC_SEARCH__EMBEDDING_ENDPOINT=${HISTER_EMBEDDING_ENDPOINT:-http://litellm:4000/v1/embeddings}
+      - HISTER__SEMANTIC_SEARCH__EMBEDDING_MODEL=${HISTER_EMBEDDING_MODEL:-manager-embed}
+      - HISTER__SEMANTIC_SEARCH__API_KEY=${HISTER_EMBEDDING_API_KEY:-${LITELLM_MASTER_KEY}}
+      - HISTER__SEMANTIC_SEARCH__DIMENSIONS=${HISTER_EMBEDDING_DIMENSIONS:-768}
+      - HISTER__SEMANTIC_SEARCH__MAX_CONTEXT_LENGTH=8192
+      - HISTER__SEMANTIC_SEARCH__SEMANTIC_WEIGHT=0.4
+      - HISTER__SEMANTIC_SEARCH__RESULT_LIMIT=50
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - ai-gateway
+
+  # Always-on context compression front door for LiteLLM (no qdrant/neo4j; M4-friendly).
+  # Clients: OPENAI_BASE_URL=http://localhost:8787/v1  (Open WebUI uses headroom:8787 on compose net)
+  # Bypass:  OPENAI_BASE_URL=http://localhost:4000/v1  (admin UI, embeddings, raw debug)
+  #
+  # Headroom has separate upstream targets per provider protocol:
+  #   OPENAI_*     — /v1/chat/completions (pi, OWUI, OpenCode, etc.)
+  #   ANTHROPIC_*  — /v1/messages (Claude Code style); defaults to api.anthropic.com
+  #                 if unset (looks like "Anthropic chatter" in /readyz even when
+  #                 OpenAI traffic correctly goes to LiteLLM).
+  # Local-first: both targets → litellm. Disable Anthropic OAuth subscription poller.
+  headroom:
+    image: ${HEADROOM_IMAGE:-ghcr.io/chopratejas/headroom:latest}
+    container_name: headroom-proxy
+    restart: unless-stopped
+    entrypoint: ["headroom", "proxy"]
+    environment:
+      - HEADROOM_HOST=0.0.0.0
+      - HOME=/tmp/headroom-home
+      - HEADROOM_WORKSPACE_DIR=/tmp/headroom-home/.headroom
+      - HEADROOM_CONFIG_DIR=/tmp/headroom-home/.headroom/config
+      # OpenAI-compatible clients → LiteLLM bus
+      - OPENAI_TARGET_API_URL=${HEADROOM_OPENAI_TARGET:-http://litellm:4000/v1}
+      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
+      # Anthropic Messages API clients → same LiteLLM bus (NOT api.anthropic.com)
+      - ANTHROPIC_TARGET_API_URL=${HEADROOM_ANTHROPIC_TARGET:-http://litellm:4000}
+      - ANTHROPIC_API_KEY=${LITELLM_MASTER_KEY}
+      # Stop background GET https://api.anthropic.com/api/oauth/usage polls
+      - HEADROOM_NO_SUBSCRIPTION_TRACKING=${HEADROOM_NO_SUBSCRIPTION_TRACKING:-1}
+    ports:
+      - "8787:8787"
+    volumes:
+      - headroom-data:/tmp/headroom-home/.headroom
+    command: ["--host", "0.0.0.0", "--port", "8787"]
+    depends_on:
+      litellm:
+        condition: service_healthy
+    # Image is often distroless; rely on depends_on + port publish. Probe from host:
+    #   curl -sf http://localhost:8787/readyz
+    # Expect checks.upstream.url to mention litellm (not api.anthropic.com).
+    networks:
+      - ai-gateway
+
+  # Botmem personal memory SoR. Requires BOTMEM_* secrets in .env (image FATAL on defaults).
+  # Changing BOTMEM_POSTGRES_PASSWORD after first boot: docker volume rm ai-gateway_botmem-postgres-data
+  botmem-postgres:
+    image: pgvector/pgvector:pg17
+    container_name: botmem-postgres
+    profiles: ["memory"]
+    restart: unless-stopped
+    shm_size: "256m"
+    command: ["postgres", "-c", "max_connections=200"]
+    # Internal only — avoid clashing with host Postgres :5432
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_USER: botmem
+      POSTGRES_PASSWORD: ${BOTMEM_POSTGRES_PASSWORD}
+      POSTGRES_DB: botmem
+    volumes:
+      - botmem-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U botmem -d botmem"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - ai-gateway
+
+  botmem-redis:
+    image: redis:7.4-alpine
+    container_name: botmem-redis
+    profiles: ["memory"]
+    restart: unless-stopped
+    expose:
+      - "6379"
+    command: redis-server --appendonly yes --appendfsync everysec
+    volumes:
+      - botmem-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - ai-gateway
+
+  botmem-api:
+    image: ghcr.io/botmem/botmem:api-latest
+    container_name: botmem-api
+    profiles: ["memory"]
+    restart: unless-stopped
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      DATABASE_URL: postgresql://botmem:${BOTMEM_POSTGRES_PASSWORD}@botmem-postgres:5432/botmem
+      REDIS_URL: redis://botmem-redis:6379
+      OLLAMA_BASE_URL: ${BOTMEM_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      AUTH_PROVIDER: ${BOTMEM_AUTH_PROVIDER:-local}
+      # Set in .env — production image rejects built-in default secrets
+      APP_SECRET: ${BOTMEM_APP_SECRET}
+      JWT_ACCESS_SECRET: ${BOTMEM_JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${BOTMEM_JWT_REFRESH_SECRET}
+      OAUTH_JWT_SECRET: ${BOTMEM_OAUTH_JWT_SECRET}
+      # Align with manager-embed / Hister nomic 768d family (v2-moe on host Ollama)
+      OLLAMA_EMBED_MODEL: ${BOTMEM_OLLAMA_EMBED_MODEL:-nomic-embed-text-v2-moe:latest}
+      OLLAMA_TEXT_MODEL: ${BOTMEM_OLLAMA_TEXT_MODEL:-qwen3.5:9b}
+      OLLAMA_VL_MODEL: ${BOTMEM_OLLAMA_VL_MODEL:-qwen3-vl:2b}
+      APP_URL: ${BOTMEM_APP_URL:-http://localhost:12412}
+      BASE_URL: ${BOTMEM_BASE_URL:-http://localhost:12412}
+      FRONTEND_URL: ${BOTMEM_FRONTEND_URL:-http://localhost:12412}
+      # Brave/Safari often open 127.0.0.1 — default CORS is FRONTEND_URL only → "Failed to fetch"
+      CORS_ALLOWED_ORIGINS: ${BOTMEM_CORS_ALLOWED_ORIGINS:-http://localhost:12412,http://127.0.0.1:12412}
+      # Force local AI (do not inherit gateway OPENROUTER_API_KEY for memory embeds)
+      AI_BACKEND: ${BOTMEM_AI_BACKEND:-ollama}
+      EMBED_BACKEND: ${BOTMEM_EMBED_BACKEND:-ollama}
+      OPENROUTER_API_KEY: ${BOTMEM_OPENROUTER_API_KEY:-}
+      DB_POOL_MAX: ${BOTMEM_DB_POOL_MAX:-50}
+      BOTMEM_ENABLE_API_WORKERS: ${BOTMEM_ENABLE_API_WORKERS:-true}
+    volumes:
+      - botmem-api-data:/app/data
+    depends_on:
+      botmem-postgres:
+        condition: service_healthy
+      botmem-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:12412/api/version || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - ai-gateway
+
+  # app-latest is a managed SPA baked to app.botmem.xyz + Firebase. entrypoint rewrites
+  # assets to same-origin /api and local auth so Brave login hits this host, not cloud.
+  botmem-app:
+    image: ghcr.io/botmem/botmem:app-latest
+    container_name: botmem-app
+    profiles: ["memory"]
+    restart: unless-stopped
+    ports:
+      - "12412:8080"
+    environment:
+      API_UPSTREAM: http://botmem-api:12412
+    volumes:
+      - ./config/botmem/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./config/botmem/entrypoint.sh:/entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    depends_on:
+      botmem-api:
+        condition: service_healthy
+    networks:
+      - ai-gateway
+
+  # A.I.D.A. document pipeline — prepare-only OCR + dual briefs + PDF/UA.
+  # Host preferred on M4: ./scripts/start_aida.sh  (uses host ocrmypdf)
+  # Optional: ./scripts/docker/compose.sh --profile aida up -d --build
+  aida:
+    build:
+      context: ./services/aida
+    image: ai-gateway-aida:local
+    container_name: aida
+    profiles: ["aida"]
+    restart: unless-stopped
+    ports:
+      - "${AIDA_PORT:-8792}:8792"
+    environment:
+      - AIDA_HOST=0.0.0.0
+      - AIDA_PORT=8792
+      - AIDA_INGEST_ROOT=/ingest
+      - AIDA_LITELLM_BASE=${AIDA_LITELLM_BASE:-http://litellm:4000}
+      - AIDA_LITELLM_KEY=${LITELLM_MASTER_KEY:-}
+      - AIDA_MODEL=${AIDA_MODEL:-manager-phi-local}
+      - AIDA_ALLOW_REMOTE=${AIDA_ALLOW_REMOTE:-0}
+      - AIDA_CONSENT_ID=${AIDA_CONSENT_ID:-consent-example-full-2026-07-02}
+      - VERAPDF_DISABLE_DOCKER=1
+    volumes:
+      - ${AIDA_INGEST_HOST_PATH:-/Volumes/ai-data/work/ingest}:/ingest
+    depends_on:
+      litellm:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8792/health')\"",
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - ai-gateway
+
+  # Vision FEATURE API (manager-vision-embed) — not LiteLLM chat.
+  # Host preferred on M4: ./scripts/start_vision_embed.sh
+  # Optional: ./scripts/docker/compose.sh --profile vision up -d
+  vision-embed:
+    build:
+      context: ./services/vision_embed
+    image: ai-gateway-vision-embed:local
+    container_name: vision-embed
+    profiles: ["vision"]
+    restart: unless-stopped
+    ports:
+      - "${VISION_EMBED_PORT:-8791}:8791"
+    environment:
+      - VISION_EMBED_HOST=0.0.0.0
+      - VISION_EMBED_PORT=8791
+      - VISION_EMBED_BACKEND=${VISION_EMBED_BACKEND:-numpy}
+      - VISION_EMBED_SIZE=${VISION_EMBED_SIZE:-224}
+      - VISION_EMBED_PATCH=${VISION_EMBED_PATCH:-16}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8791/health')\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ai-gateway
+
+  # -------------------------------------------------------------------------
+  # Profile: security — hybrid parallel prompt I/O metrics (Vigil-compatible
+  # scanner + optional LLMTrace shadow proxy). Default path stays
+  # Headroom → LiteLLM; scanners join on x-litellm-call-id (fail-open).
+  #   ./scripts/docker/compose.sh --profile security up -d --build
+  # -------------------------------------------------------------------------
+  prompt-io:
+    build:
+      context: ./services/prompt_io
+      dockerfile: Dockerfile
+    image: ai-gateway-prompt-io:local
+    container_name: prompt-io
+    profiles: ["security"]
+    restart: unless-stopped
+    ports:
+      - "${PROMPT_IO_PORT:-5050}:5050"
+    environment:
+      - PROMPT_IO_HOST=0.0.0.0
+      - PROMPT_IO_PORT=5050
+      # Optional full deadbits/vigil-llm forward (empty = local heuristics only)
+      - PROMPT_IO_VIGIL_UPSTREAM=${PROMPT_IO_VIGIL_UPSTREAM:-}
+      - PROMPT_IO_FORWARD_TIMEOUT=${PROMPT_IO_FORWARD_TIMEOUT:-2.0}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5050/health')\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ai-gateway
+
+  # Optional shadow lane: clients opt-in to base_url http://localhost:8090/v1
+  # upstream = Headroom (token conservation) or LiteLLM bypass.
+  # Images: ghcr.io/techlab-innov/llmtrace-proxy (ELv2 engine from v0.4).
+  llmtrace:
+    image: ghcr.io/techlab-innov/llmtrace-proxy:latest
+    container_name: llmtrace-proxy
+    profiles: ["security"]
+    restart: unless-stopped
+    ports:
+      - "${LLMTRACE_PORT:-8090}:8080"
+    volumes:
+      - ./config/security/llmtrace.yaml:/config/config.yaml:ro
+      - llmtrace-data:/data
+    environment:
+      - LLMTRACE_CONFIG=/config/config.yaml
+      - LLMTRACE_UPSTREAM_URL=${LLMTRACE_UPSTREAM_URL:-http://headroom:8787}
+      - LLMTRACE_STORAGE_DATABASE_PATH=/data/llmtrace.db
+      - LLMTRACE_LOG_LEVEL=${LLMTRACE_LOG_LEVEL:-info}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - headroom
+    networks:
+      - ai-gateway
+
+networks:
+  ai-gateway:
+    driver: bridge
+
+volumes:
+  manager-catalog-state:
+  open-webui-data:
+  hister-data:
+  headroom-data:
+  litellm-postgres-data:
+  botmem-postgres-data:
+  botmem-redis-data:
+  botmem-api-data:
+  llmtrace-data:
+  turnstone-data:
+  turnstone-workspace:

@@ -1,0 +1,11 @@
+{
+  "$schema": "./tools/client-side.mjson",
+  "mcpServers": {
+    "karakeep-karaka-bookmark-tagging-mcp-server": {
+      "command": "${?KARAKEEP_MCP_PATH:-npx}",
+      "args": ["-y @karakeep/mcp"],
+      "env": {
+        "KARAKEEP_API_ADDR": "${?VAR:-https://try.karakeep.app}",
+        "KARAKEEP_API_KEY": "${?SECRET_KARA_TOKEN}"
+    }}}}
+EOF && echo "" || cat $HOME/ai-gateway/config/mcp/bookmarks.json | head -20 || true 2>/dev/null

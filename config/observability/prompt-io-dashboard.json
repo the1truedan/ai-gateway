@@ -1,0 +1,95 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Prompt scans (5m)",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(increase(prompt_io_scan_total{mode=\"prompt\"}[5m]))",
+          "legendFormat": "prompt scans"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Response scans (5m)",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(increase(prompt_io_scan_total{mode=\"response\"}[5m]))",
+          "legendFormat": "response scans"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Injection flags (5m)",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(increase(prompt_io_injection_flag_total[5m]))",
+          "legendFormat": "flags"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Scan outcomes",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "expr": "sum by (mode, outcome) (rate(prompt_io_scan_total[1m]))",
+          "legendFormat": "{{mode}} / {{outcome}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Scanner hits",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "targets": [
+        {
+          "expr": "sum by (scanner) (rate(prompt_io_scanner_hits_total[1m]))",
+          "legendFormat": "{{scanner}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Scan latency p95",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, mode) (rate(prompt_io_scan_latency_seconds_bucket[5m])))",
+          "legendFormat": "p95 {{mode}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "LiteLLM request latency (if exported)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(litellm_request_total_latency_metric_bucket[5m])))",
+          "legendFormat": "p95 litellm"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["ai-gateway", "prompt-io", "security"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "title": "AI-Gateway Prompt I/O (hybrid Vigil metrics)",
+  "uid": "ai-gateway-prompt-io",
+  "version": 1
+}

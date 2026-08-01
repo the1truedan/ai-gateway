@@ -1,0 +1,244 @@
+name: manager-orchestration
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: nas-host-ollama
+    restart: unless-stopped
+    gpus: all
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+      OLLAMA_KEEP_ALIVE: 10m
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    ports:
+      - "11435:11434"
+    volumes:
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/models/ollama-nas-host:/root/.ollama
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/codebase-mirror:/shared/code:ro
+    networks: [manager-orchestration]
+    labels:
+      manager.stack: orchestration
+      manager.role: p2000-small-models
+
+  opencv5:
+    build:
+      context: ../../services/opencv5
+    image: manager-opencv5:local
+    container_name: nas-host-opencv5
+    restart: unless-stopped
+    ports:
+      - "8795:8795"
+    volumes:
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/uv-cache:/shared/cache/uv
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/models:/shared/models:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8795/healthz')\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks: [manager-orchestration]
+    labels:
+      manager.stack: orchestration
+      manager.role: opencv5-preprocessing
+
+  capacity-agent:
+    build:
+      context: ../..
+      dockerfile: services/capacity_agent/Dockerfile
+    image: manager-capacity-agent:local
+    container_name: nas-host-capacity
+    restart: unless-stopped
+    gpus: all
+    env_file: ${NAS_HOST_ENV_FILE:-.env}
+    environment:
+      CAPACITY_AGENT_HOST_ID: nas-host
+      CAPACITY_AGENT_HOST: 0.0.0.0
+      CAPACITY_AGENT_PORT: 8794
+      CAPACITY_AGENT_TOKEN: ${LITELLM_MASTER_KEY}
+      CAPACITY_MAX_INFLIGHT: 1
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    ports:
+      - "8794:8794"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8794/healthz')\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks: [manager-orchestration]
+    labels:
+      manager.stack: orchestration
+      manager.role: capacity
+
+  litellm-db:
+    image: postgres:16
+    container_name: nas-host-litellm-db
+    restart: unless-stopped
+    env_file: ${NAS_HOST_ENV_FILE:-.env}
+    environment:
+      POSTGRES_DB: litellm
+      POSTGRES_USER: llmproxy
+      POSTGRES_PASSWORD: ${LITELLM_DB_PASSWORD}
+    volumes:
+      - /mnt/user/appdata/manager-orchestration/litellm-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d litellm -U llmproxy"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks: [manager-orchestration]
+    labels:
+      manager.stack: orchestration
+      manager.role: local-proxy-logging
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: nas-host-litellm
+    restart: unless-stopped
+    env_file: ${NAS_HOST_ENV_FILE:-.env}
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_SALT_KEY: ${LITELLM_SALT_KEY}
+      DATABASE_URL: postgresql://llmproxy:${LITELLM_DB_PASSWORD}@litellm-db:5432/litellm
+      # Raw node LiteLLM endpoints avoid a Headroom → orchestrator → Headroom loop.
+      # Every user-facing request still enters through the caller's local Headroom.
+      GPU_HOST_LITELLM_API_BASE: http://<gpu-host-ip>:4000/v1
+      MAC_CLIENT_LITELLM_API_BASE: http://<mac-client-ip>:4000/v1
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      GEMINI_FREE_API_KEY: ${GEMINI_FREE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      MIMO_API_BASE: ${MIMO_API_BASE:-https://api.xiaomimimo.com/v1}
+      MIMO_API_KEY: ${MIMO_API_KEY:-}
+      XAI_API_KEY: ${XAI_API_KEY:-}
+      NAS_HOST_OLLAMA_API_BASE: http://ollama:11434
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    volumes:
+      - ../../litellm_config.nas-host.yaml:/app/config.yaml:ro
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/uv-cache:/shared/cache/uv
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/models:/shared/models:ro
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/codebase-mirror:/shared/code:ro
+    ports:
+      - "4000:4000"
+    depends_on:
+      litellm-db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:4000/health/liveliness')\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks: [manager-orchestration]
+    labels:
+      manager.stack: orchestration
+      manager.role: local-routing-proxy
+
+  orchestrator:
+    build:
+      context: ../..
+      dockerfile: services/orchestrator/Dockerfile
+    image: manager-orchestrator:local
+    container_name: manager-orchestrator
+    # Retained during the soak only. Start explicitly with --profile rollback.
+    profiles: ["rollback"]
+    restart: unless-stopped
+    env_file: ${NAS_HOST_ENV_FILE:-.env}
+    environment:
+      ORCHESTRATOR_HOST: 0.0.0.0
+      ORCHESTRATOR_PORT: 8790
+      ORCHESTRATOR_API_KEY: ${LITELLM_MASTER_KEY}
+      ORCHESTRATOR_UPSTREAM_KEY: ${LITELLM_MASTER_KEY}
+      CAPACITY_AGENT_TOKEN: ${LITELLM_MASTER_KEY}
+    ports:
+      - "8790:8790"
+    volumes:
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/codebase-mirror:/shared/code:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8790/healthz')\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks: [manager-orchestration]
+    depends_on:
+      litellm:
+        condition: service_healthy
+    labels:
+      manager.stack: orchestration
+      manager.role: semantic-router
+
+  headroom:
+    image: ${HEADROOM_IMAGE:-ghcr.io/chopratejas/headroom:latest}
+    container_name: nas-host-headroom
+    restart: unless-stopped
+    entrypoint: ["headroom", "proxy"]
+    env_file: ${NAS_HOST_ENV_FILE:-.env}
+    environment:
+      HEADROOM_HOST: 0.0.0.0
+      HOME: /tmp/headroom-home
+      HEADROOM_WORKSPACE_DIR: /tmp/headroom-home/.headroom
+      HEADROOM_CONFIG_DIR: /tmp/headroom-home/.headroom/config
+      OPENAI_TARGET_API_URL: ${HEADROOM_OPENAI_TARGET:-http://<mac-client-ip>:8790/v1}
+      OPENAI_API_KEY: ${LITELLM_MASTER_KEY}
+      ANTHROPIC_TARGET_API_URL: ${HEADROOM_ANTHROPIC_TARGET:-http://<mac-client-ip>:8790}
+      ANTHROPIC_API_KEY: ${LITELLM_MASTER_KEY}
+      HEADROOM_NO_SUBSCRIPTION_TRACKING: "1"
+    command: ["--host", "0.0.0.0", "--port", "8787"]
+    ports:
+      - "8787:8787"
+    volumes:
+      - /mnt/user/appdata/manager-orchestration/headroom:/tmp/headroom-home/.headroom
+    networks: [manager-orchestration]
+    labels:
+      manager.stack: orchestration
+      manager.role: token-conservation
+
+  open-webui:
+    image: ${OPENWEBUI_IMAGE:-ghcr.io/open-webui/open-webui:main}
+    container_name: nas-host-open-webui
+    restart: unless-stopped
+    env_file: ${NAS_HOST_ENV_FILE:-.env}
+    environment:
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
+      OPENAI_API_BASE_URL: http://headroom:8787/v1
+      OPENAI_API_KEY: ${LITELLM_MASTER_KEY}
+      OLLAMA_BASE_URL: http://<gpu-host-ip>:11434
+    ports:
+      - "3001:8080"
+    volumes:
+      - /mnt/user/appdata/manager-orchestration/open-webui:/app/backend/data
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/work:/shared/work:ro
+      - ${AI_SHARED_ROOT:-/mnt/ai-data}/codebase-mirror:/shared/code:ro
+    depends_on:
+      headroom:
+        condition: service_started
+    networks: [manager-orchestration]
+    labels:
+      manager.stack: orchestration
+      manager.role: canonical-chat
+
+networks:
+  manager-orchestration:
+    name: manager-orchestration
+    driver: bridge

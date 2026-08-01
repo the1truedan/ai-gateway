@@ -1,0 +1,10 @@
+# Hister overlay for ai-gateway (mounted into container as /hister/config.yml).
+# Local file index of Atuin export (shell history → markdown).
+# Semantic search env vars from docker-compose still apply (HISTER__SEMANTIC_SEARCH__*).
+
+indexer:
+  max_file_size_mb: 2
+  directories:
+    - path: /data/dev-history
+      filetypes: ["md"]
+      delete_on_remove: true

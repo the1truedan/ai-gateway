@@ -1,0 +1,79 @@
+{
+  "created_at": "2026-07-13T00:00:00+00:00",
+  "models_dir": "/Volumes/models/turboquant/models",
+  "hf_cache": "/Volumes/models/turboquant/hf-cache",
+  "env_file": "/Volumes/models/turboquant/turboquant.env",
+  "notes": [
+    "2026-07-13: TQ pulls done (gemma4-12b, qwen3-8b, qwen3.5-9b linked); optional TQ4_1S requant still pending/manual.",
+    "Profile: Apple M4 Mac Mini, 24 GB unified memory",
+    "TurboQuant+ v0.2.0 \u2014 turbo KV (q8_0/turbo3); TQ4_1S requant optional for fused Metal kernels",
+    "Function matrix: coder = qwen3.5-9b or qwen3-8b (:8082 manager-fast-turbo); reason = gemma4-12b (:8081 manager-reasoning-turbo)",
+    "Ollama IQ4/Q5 symlinks: turbo KV only, not full TQ4_1S weight optimization",
+    "HF pulls use HF_HOME on models volume \u2014 not ~/.cache/huggingface",
+    "Runtime: one large turbo model loaded at a time for heavy agent sessions; dual servers OK only for light smoke",
+    "LiteLLM: manager-reasoning-turbo \u2192 :8081, manager-fast-turbo \u2192 :8082, tier-local-* aliases",
+    "Cloud agentic: manager-gemini-agent via GEMINI_API_KEY (not TurboQuant)"
+  ],
+  "actions": [
+    {
+      "action": "link",
+      "model": "qwen3.5-9b-q4_k_s",
+      "hf_repo": "unsloth/Qwen3.5-9B-GGUF",
+      "quant": "Q4_K_S",
+      "reason": "Best M4 agent coder (tools+thinking+128K); coder profile :8082",
+      "size_gb": 5.0,
+      "stage": 1,
+      "enabled": false,
+      "status": "done",
+      "role": "agent-coder-turbo",
+      "litellm_route": "manager-fast-turbo",
+      "env_key": "TURBOQUANT_MODEL_CODER",
+      "env_value": "/Volumes/models/turboquant/models/qwen3.5-9b-q4_k_s.gguf",
+      "pull_cmd": "./scripts/pull_turboquant_models.sh qwen35"
+    },
+    {
+      "action": "pull",
+      "model": "gemma4-12b-q4_k_m",
+      "hf_repo": "ggml-org/gemma-4-12B-it-GGUF",
+      "quant": "Q4_K_M",
+      "reason": "Best turbo-native orchestrator; official Gemma4 + turbo Metal FA; reasoning :8081",
+      "size_gb": 7.56,
+      "stage": 2,
+      "enabled": true,
+      "status": "done",
+      "role": "orchestrator-turbo",
+      "litellm_route": "manager-reasoning-turbo",
+      "env_key": "TURBOQUANT_MODEL_REASONING",
+      "env_value": "/Volumes/models/turboquant/models/gemma4-12b-q4_k_m.gguf",
+      "pull_cmd": "./scripts/pull_turboquant_models.sh gemma12"
+    },
+    {
+      "action": "pull",
+      "model": "qwen3-8b-q4_k_m",
+      "hf_repo": "unsloth/Qwen3-8B-GGUF",
+      "quant": "Q4_K_M",
+      "reason": "Lighter coder fallback (~5.2 GB); swap if qwen3.5-9b too heavy alongside embedders",
+      "size_gb": 5.23,
+      "stage": 3,
+      "enabled": true,
+      "status": "done",
+      "role": "agent-coder-turbo-alt",
+      "litellm_route": "manager-fast-turbo",
+      "env_key": "TURBOQUANT_MODEL_CODER",
+      "env_value": "/Volumes/models/turboquant/models/qwen3-8b-q4_k_m.gguf",
+      "pull_cmd": "./scripts/pull_turboquant_models.sh qwen38"
+    },
+    {
+      "action": "requant",
+      "model": "tq4_1s",
+      "reason": "Optional: llama-quantize SOURCE \u2192 TQ4_1S for fused Metal weight kernels (after HF pull)",
+      "size_gb": 0,
+      "stage": 4,
+      "enabled": false,
+      "status": "pending",
+      "role": "optimization",
+      "litellm_route": "",
+      "pull_cmd": "SOURCE_GGUF=models/<model>.gguf ./scripts/pull_turboquant_models.sh requant"
+    }
+  ]
+}

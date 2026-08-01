@@ -1,0 +1,475 @@
+# Linux / Unraid overlay — same routes as litellm_config.yaml with host-reachable API bases.
+# Set OLLAMA_HOST_IP / TURBOQUANT_HOST_IP in .env (e.g. <nas-host-ip-alt>).
+# Optional remote GPU: VLLM_API_BASE or TURBOQUANT_CUDA_API_BASE (PopOS 4060 Ti / Unraid P2000).
+# This is the gpu-host worker catalog. Cloud aliases may remain for temporary
+# compatibility, but credentials are not injected and no automatic route can
+# reach them. The Mac manager owns every cloud decision.
+
+model_list:
+  - model_name: manager-fast-local
+    litellm_params:
+      model: ollama_chat/qwen3.5:9b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  # gpu-host Ollama 0.32+ has gemma4:12b (was gemma3:12b stand-in pre-0.23.2+)
+  - model_name: manager-reasoning-local
+    litellm_params:
+      model: ollama_chat/gemma4:12b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  # DeepSeek-R1 distill 14B — math/multi-step specialist on 4060 Ti 16GB (~9 GB Q4)
+  - model_name: manager-reasoning-deepseek
+    litellm_params:
+      model: ollama_chat/deepseek-r1:14b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  # Terminal PHI fallback target. Its explicit empty fallback chain prevents
+  # the global/cloud defaults from being considered after both PHI models fail.
+  - model_name: manager-phi-reason-local
+    litellm_params:
+      model: ollama_chat/gemma4:12b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: manager-reasoning-turbo
+    litellm_params:
+      model: openai/gemma4-orchestrator
+      api_base: os.environ/TURBOQUANT_ORCH_API_BASE
+      api_key: local
+
+  - model_name: manager-fast-turbo
+    litellm_params:
+      model: openai/qwen-coder
+      api_base: os.environ/TURBOQUANT_CODER_API_BASE
+      api_key: local
+
+  - model_name: claude-haiku-4-5-20251001
+    litellm_params:
+      model: ollama_chat/qwen3.5:9b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: claude-sonnet-4-6
+    litellm_params:
+      model: ollama_chat/qwen3.5:9b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: claude-opus-4-7
+    litellm_params:
+      model: ollama_chat/gemma4:12b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: manager-ocr-local
+    litellm_params:
+      model: ollama_chat/glm-ocr:latest
+      api_base: os.environ/OLLAMA_API_BASE
+
+  # Bleeding-edge OCR alt (token-efficient); pick via model name deepseek-ocr if preferred
+  - model_name: manager-ocr-deepseek
+    litellm_params:
+      model: ollama_chat/deepseek-ocr:latest
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: manager-translate-el
+    litellm_params:
+      model: ollama_chat/translategemma:4b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  # Prefer installed VLMs on 4060 Ti 16GB (qwen3-vl primary; qwen2.5vl secondary alias)
+  - model_name: manager-vision-local
+    litellm_params:
+      model: ollama_chat/qwen3-vl:8b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: manager-vision-qwen25
+    litellm_params:
+      model: ollama_chat/qwen2.5vl:7b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  # Vision FEATURE encoder — set VISION_EMBED_API_BASE (default host.docker.internal:8791)
+  - model_name: manager-vision-embed
+    litellm_params:
+      model: openai/manager-vision-embed
+      api_base: os.environ/VISION_EMBED_API_BASE
+      api_key: local
+
+  - model_name: manager-llama-local
+    litellm_params:
+      model: ollama_chat/qwen3.5:9b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  # TEMP: gpt-oss:20b-cloud until Ollama plan unlocks glm-5.2:cloud
+  - model_name: manager-reasoning-cloud
+    litellm_params:
+      model: ollama_chat/gpt-oss:20b-cloud
+      api_base: os.environ/OLLAMA_API_BASE
+
+  # Local embeddings (Hister / RAG)
+  - model_name: manager-embed
+    litellm_params:
+      model: openai/nomic-embed-text-v2-moe:latest
+      api_base: os.environ/OLLAMA_API_BASE
+      api_key: ollama
+
+  # Stable tier aliases
+  - model_name: tier-local-fast
+    litellm_params:
+      model: ollama_chat/qwen2.5-coder:14b-instruct-q5_K_M
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: tier-local-reason
+    litellm_params:
+      model: ollama_chat/deepseek-r1:14b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  # gpu-host NVIDIA tiers. Ollama schedules these models on the RTX 4060 Ti;
+  # keep the aliases stable if the serving engine changes later.
+  - model_name: tier-nvidia-fast
+    litellm_params:
+      # Qwen 3.5 emits native OpenAI tool_calls; Qwen 2.5 Coder returned
+      # tool requests as plain JSON content, which coding agents cannot execute.
+      model: ollama_chat/qwen3.5:9b
+      api_base: os.environ/OLLAMA_API_BASE
+      think: false
+      # LiteLLM's Ollama adapter otherwise leaves Ollama at its 4096-token
+      # runtime default, even when clients advertise a 128K model window.
+      num_ctx: 32768
+      # Agent/tool loops need deterministic sampling. The upstream model's
+      # baked defaults (temperature=1, presence_penalty=1.5) caused normal-EOS
+      # truncation and hallucinated repository summaries after a tool result.
+      temperature: 0.2
+      top_p: 0.8
+      presence_penalty: 0
+
+  - model_name: tier-nvidia-reason
+    litellm_params:
+      model: ollama_chat/deepseek-r1:14b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  # Native-tool fallback for agent loops that fail on the faster Qwen tier.
+  - model_name: tier-nvidia-agent
+    litellm_params:
+      model: ollama_chat/gemma4:12b
+      api_base: os.environ/OLLAMA_API_BASE
+      think: false
+      num_ctx: 32768
+      temperature: 0.2
+      top_p: 0.8
+
+  - model_name: tier-free-cloud
+    litellm_params:
+      model: openrouter/openrouter/free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: tier-gemini
+    litellm_params:
+      model: gemini/gemini-3.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: tier-gemini-free
+    litellm_params:
+      model: gemini/gemini-3.5-flash
+      api_key: os.environ/GEMINI_FREE_API_KEY
+
+  - model_name: tier-paid-cloud
+    litellm_params:
+      model: xai/grok-code-fast-1
+      api_key: os.environ/XAI_API_KEY
+
+  # Optional OpenAI/Codex cloud tier. Requires OPENAI_API_KEY; never use for PHI.
+  - model_name: manager-codex-cloud
+    litellm_params:
+      model: openai/gpt-5.6-terra
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: tier-codex-cloud
+    litellm_params:
+      model: openai/gpt-5.6-terra
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: manager-mimo-cloud
+    litellm_params:
+      model: openai/mimo-v2.5-pro
+      api_base: os.environ/MIMO_API_BASE
+      api_key: os.environ/MIMO_API_KEY
+
+  - model_name: tier-mimo-cloud
+    litellm_params:
+      model: openai/mimo-v2.5-pro
+      api_base: os.environ/MIMO_API_BASE
+      api_key: os.environ/MIMO_API_KEY
+
+  # Role aliases — tiered orchestration (plan vs execute)
+  # Cloud plans / free recon; local executes; PHI never leaves local.
+  # Source: https://grok.com/share/c2hhcmQtNA_d07d2ee7-9ae1-4418-820d-7ea7a41e17b4
+  - model_name: role-plan
+    litellm_params:
+      model: ollama_chat/deepseek-r1:14b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: tier-plan-cloud
+    litellm_params:
+      model: gemini/gemini-3.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: role-recon
+    litellm_params:
+      model: ollama_chat/deepseek-r1:14b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: role-execute
+    litellm_params:
+      model: ollama_chat/qwen3.5:9b
+      api_base: os.environ/OLLAMA_API_BASE
+      think: false
+      num_ctx: 32768
+      temperature: 0.2
+      top_p: 0.8
+      presence_penalty: 0
+
+  - model_name: tier-execute-local
+    litellm_params:
+      model: ollama_chat/qwen2.5-coder:14b-instruct-q5_K_M
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: role-reason
+    litellm_params:
+      model: ollama_chat/deepseek-r1:14b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: role-phi-local
+    litellm_params:
+      model: ollama_chat/qwen3.5:9b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: role-audit
+    litellm_params:
+      model: ollama_chat/deepseek-r1:14b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  # NVIDIA/CUDA compatibility aliases backed by installed gpu-host Ollama models.
+  - model_name: manager-fast-cuda
+    litellm_params:
+      model: ollama_chat/qwen3.5:9b
+      api_base: os.environ/OLLAMA_API_BASE
+      think: false
+      num_ctx: 32768
+      temperature: 0.2
+      top_p: 0.8
+      presence_penalty: 0
+
+  - model_name: manager-heavy-cuda
+    litellm_params:
+      model: ollama_chat/deepseek-r1:14b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  # Google AI Studio (Gemini) — GEMINI_API_KEY; gemini/ prefix required
+  # gemini-2.5-flash blocked for new users (~2026-07) → gemini-3.5-flash
+  - model_name: manager-gemini-fast
+    litellm_params:
+      model: gemini/gemini-3.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: manager-gemini-agent
+    litellm_params:
+      model: gemini/gemini-3.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: manager-gemini-vision
+    litellm_params:
+      model: gemini/gemini-3.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: tier-local-vision
+    litellm_params:
+      model: ollama_chat/qwen3-vl:8b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: manager-big-context
+    litellm_params:
+      model: openrouter/qwen/qwen3-coder:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: manager-audit-claude
+    litellm_params:
+      model: openrouter/poolside/laguna-xs-2.1:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: manager-understand-audit
+    litellm_params:
+      model: openrouter/qwen/qwen3-coder:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: manager-openrouter-free
+    litellm_params:
+      model: openrouter/openrouter/free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: manager-grok-coding
+    litellm_params:
+      model: xai/grok-code-fast-1
+      api_key: os.environ/XAI_API_KEY
+
+include:
+  - openrouter_free_models.generated.yaml
+
+# Fallbacks MUST live under router_settings (or litellm_settings).
+# Top-level `fallbacks:` is ignored by LiteLLM 1.92+ → Fallbacks=None → hard 500s.
+litellm_settings:
+  callbacks: ["prometheus"]
+  drop_params: true
+  request_timeout: 600
+  num_retries: 2
+  allowed_fails: 2
+  cooldown_time: 30
+  telemetry: false
+  store_prompts_in_spend_logs: false
+  maximum_spend_logs_retention_period: "90d"
+  default_fallbacks: [manager-fast-local]
+
+# Guardrails — layered purview with M.A.N.A.G.E.R. (see litellm_config.yaml + config/security/README.md)
+# Guardrails are opt-in via guardrails[] / tags so coding-tool content is not rejected.
+guardrails:
+  - guardrail_name: credentials-block
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: pre_call
+      default_on: false
+      patterns:
+        - pattern_type: prebuilt
+          pattern_name: aws_access_key
+          action: BLOCK
+        - pattern_type: prebuilt
+          pattern_name: aws_secret_key
+          action: BLOCK
+        - pattern_type: prebuilt
+          pattern_name: github_token
+          action: BLOCK
+        - pattern_type: prebuilt
+          pattern_name: slack_token
+          action: BLOCK
+        - pattern_type: prebuilt
+          pattern_name: generic_api_key
+          action: BLOCK
+
+  - guardrail_name: baseline-pii-mask
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: pre_call
+      default_on: false
+      patterns:
+        - pattern_type: prebuilt
+          pattern_name: us_ssn
+          action: MASK
+        - pattern_type: prebuilt
+          pattern_name: email
+          action: MASK
+        - pattern_type: prebuilt
+          pattern_name: us_phone
+          action: MASK
+        - pattern_type: prebuilt
+          pattern_name: credit_card
+          action: MASK
+        - pattern_type: prebuilt
+          pattern_name: visa
+          action: MASK
+        - pattern_type: prebuilt
+          pattern_name: mastercard
+          action: MASK
+      pattern_redaction_format: "[{pattern_name}_REDACTED]"
+
+  - guardrail_name: claims-agent-safety
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: pre_call
+      default_on: false
+      categories:
+        - category: claims_fraud_coaching
+          enabled: true
+          action: BLOCK
+          severity_threshold: medium
+        - category: claims_phi_disclosure
+          enabled: true
+          action: BLOCK
+          severity_threshold: medium
+        - category: claims_prior_auth_gaming
+          enabled: true
+          action: BLOCK
+          severity_threshold: medium
+        - category: claims_system_override
+          enabled: true
+          action: BLOCK
+          severity_threshold: medium
+        - category: claims_medical_advice
+          enabled: true
+          action: BLOCK
+          severity_threshold: high
+
+  - guardrail_name: hybrid-prompt-io-during
+    litellm_params:
+      guardrail: hybrid_prompt_io.HybridPromptIOGuardrail
+      mode: during_call
+      default_on: true
+      api_base: os.environ/PROMPT_IO_BASE
+  - guardrail_name: hybrid-prompt-io-post
+    litellm_params:
+      guardrail: hybrid_prompt_io.HybridPromptIOGuardrail
+      mode: post_call
+      default_on: true
+      api_base: os.environ/PROMPT_IO_BASE
+
+router_settings:
+  routing_strategy: simple-shuffle
+  num_retries: 2
+  timeout: 600
+  allowed_fails: 2
+  cooldown_time: 30
+  fallbacks:
+    - manager-reasoning-turbo: [manager-reasoning-local, manager-reasoning-deepseek]
+    - manager-reasoning-local: [manager-reasoning-deepseek]
+    - manager-reasoning-deepseek: [manager-reasoning-local]
+    - manager-reasoning-cloud: []
+    - manager-fast-turbo: [manager-fast-local]
+    - manager-fast-local: []
+    - tier-local-fast: [manager-fast-local]
+    - tier-local-reason: [manager-reasoning-local, manager-reasoning-deepseek]
+    - tier-nvidia-fast: [tier-nvidia-agent, manager-fast-local]
+    - tier-nvidia-agent: [manager-reasoning-local]
+    - tier-nvidia-reason: [manager-reasoning-local, manager-reasoning-deepseek]
+    - manager-fast-cuda: [manager-fast-local]
+    - manager-heavy-cuda: [manager-reasoning-local, manager-reasoning-deepseek]
+    - manager-vision-local: [manager-vision-qwen25]
+    - manager-vision-qwen25: [manager-vision-local]
+    - manager-ocr-local: [manager-ocr-deepseek, manager-vision-local]
+    - manager-ocr-deepseek: [manager-ocr-local, manager-vision-local]
+    - manager-vision-embed: [manager-vision-local]
+    - tier-local-vision: [manager-vision-local, manager-vision-qwen25]
+    - manager-llama-local: [manager-fast-local]
+    - manager-gemini-fast: []
+    - manager-gemini-agent: []
+    - manager-gemini-vision: []
+    - tier-gemini: []
+    - tier-gemini-free: []
+    # Role aliases are local by default; cloud aliases require explicit selection.
+    - role-plan: [manager-reasoning-local, manager-reasoning-deepseek]
+    - tier-plan-cloud: []
+    - role-recon: [manager-reasoning-local, manager-reasoning-deepseek]
+    - role-execute: [manager-fast-local]
+    - tier-execute-local: [role-execute, manager-fast-local]
+    - role-reason: [manager-reasoning-local, manager-reasoning-deepseek]
+    - role-phi-local: [manager-phi-reason-local]
+    - manager-phi-reason-local: []
+    - role-audit: [manager-reasoning-local, manager-reasoning-deepseek]
+    - manager-codex-cloud: []
+    - tier-codex-cloud: []
+    - manager-mimo-cloud: []
+    - tier-mimo-cloud: []
+    - manager-big-context: []
+    - manager-understand-audit: []
+    - manager-audit-claude: []
+    - claude-sonnet-4-6: [manager-fast-local]
+    - claude-opus-4-7: [manager-reasoning-local]
+    - claude-haiku-4-5-20251001: [manager-fast-local]
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  # Required for Admin UI login, virtual keys, users, spend tracking
+  database_url: os.environ/DATABASE_URL

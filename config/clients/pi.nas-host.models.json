@@ -1,0 +1,16 @@
+{
+  "providers": {
+    "nas-host-headroom": {
+      "baseUrl": "http://<nas-host-ip>:8787/v1",
+      "apiKey": "LITELLM_MASTER_KEY",
+      "api": "openai-completions",
+      "models": [
+        {"id": "role-auto", "name": "Automatic local/free routing"},
+        {"id": "role-execute", "name": "Explicit local execution"},
+        {"id": "role-phi-local", "name": "PHI local only"},
+        {"id": "tier-codex-cloud", "name": "Paid Codex (explicit)"},
+        {"id": "tier-mimo-cloud", "name": "Paid MiMo (explicit)"}
+      ]
+    }
+  }
+}

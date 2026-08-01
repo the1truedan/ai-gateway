@@ -1,0 +1,29 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "gpu-host-headroom/tier-nvidia-fast",
+  "provider": {
+    "gpu-host-headroom": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "gpu-host Headroom → LiteLLM",
+      "options": {
+        "baseURL": "http://localhost:8787/v1",
+        "apiKey": "{env:LITELLM_MASTER_KEY}"
+      },
+      "models": {
+        "role-auto": { "name": "Automatic best-fit local host" },
+        "role-execute": { "name": "Execute: NVIDIA Qwen coder 14B" },
+        "role-reason": { "name": "Reason: NVIDIA DeepSeek R1 14B" },
+        "tier-nvidia-fast": { "name": "NVIDIA Qwen coder 14B" },
+        "tier-nvidia-agent": { "name": "NVIDIA Gemma 4 12B agent fallback" },
+        "tier-nvidia-reason": { "name": "NVIDIA DeepSeek R1 14B" },
+        "role-plan": { "name": "Local planning" },
+        "tier-codex-cloud": { "name": "OpenAI GPT-5.6 Terra (non-PHI)" },
+        "role-phi-local": { "name": "PHI local only" },
+        "tier-gemini-free": { "name": "Cloud: Gemini (explicit)" },
+        "tier-free-cloud": { "name": "Cloud: OpenRouter free (explicit)" },
+        "tier-mimo-cloud": { "name": "Cloud: MiMo (explicit)" },
+        "tier-grok-cloud": { "name": "Cloud: Grok API (explicit)" }
+      }
+    }
+  }
+}

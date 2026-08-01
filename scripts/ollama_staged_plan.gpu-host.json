@@ -1,0 +1,137 @@
+{
+  "created_at": "2026-07-15T23:50:00+00:00",
+  "models_dir": "/usr/share/ollama/.ollama/models",
+  "notes": [
+    "Profile: gpu-host Pop!_OS, RTX 4060 Ti 16GB, Ryzen 5 3600, 62GB RAM",
+    "Host: <gpu-host-ip>",
+    "Model paths (keep multi-path for now): /usr/share/ollama/.ollama/models, $HOME/.ollama/models, /MCP_WIP/ollama",
+    "Keep multi-path for now; later merge to Unraid NFS v4.2 share, client-mounted on boot (not manual mount).",
+    "Comfortable ≤12 GB; tight single-load ≤15 GB; reject ≥16 GB for agent loops.",
+    "Stage 1: repair/correctness pulls for linux LiteLLM routes.",
+    "Stage 2: optional reclaim after gemma4 soak (disabled).",
+    "Stage 3: optional single-load heavy gpt-oss:20b (disabled).",
+    "Stage 4: rejected — offload or NFS/shared heavy node only.",
+    "Runtime: one large model at a time; embedders can stay resident.",
+    "Routes: litellm_config.linux.yaml (manager-reasoning-local=gemma4:12b, manager-reasoning-deepseek=deepseek-r1:14b)."
+  ],
+  "actions": [
+    {
+      "action": "pull",
+      "model": "nomic-embed-text-v2-moe:latest",
+      "reason": "Repair incomplete pull; manager-embed on linux overlay",
+      "size_gb": 0.96,
+      "stage": 1,
+      "enabled": true,
+      "role": "embedding",
+      "litellm_route": "manager-embed"
+    },
+    {
+      "action": "pull",
+      "model": "translategemma:4b",
+      "reason": "manager-translate-el Greek + multi-lang specialist",
+      "size_gb": 3.3,
+      "stage": 1,
+      "enabled": true,
+      "role": "translate-el",
+      "litellm_route": "manager-translate-el"
+    },
+    {
+      "action": "pull",
+      "model": "deepseek-r1:14b",
+      "reason": "Best DeepSeek for 4060 Ti 16GB; manager-reasoning-deepseek",
+      "size_gb": 9.0,
+      "stage": 1,
+      "enabled": true,
+      "role": "reasoning-deepseek",
+      "litellm_route": "manager-reasoning-deepseek"
+    },
+    {
+      "action": "rm",
+      "model": "gemma3:12b",
+      "reason": "Superseded by gemma4:12b on manager-reasoning-local",
+      "size_gb": 8.15,
+      "stage": 2,
+      "enabled": true,
+      "role": "reasoning-legacy",
+      "litellm_route": ""
+    },
+    {
+      "action": "rm",
+      "model": "huihui_ai/jan-nano-abliterated:4b",
+      "reason": "Abliterated models no longer needed; reclaim disk",
+      "size_gb": 2.5,
+      "stage": 2,
+      "enabled": true,
+      "role": "legacy-abliterated",
+      "litellm_route": ""
+    },
+    {
+      "action": "pull",
+      "model": "gpt-oss:20b",
+      "reason": "Optional heavy reasoner (~13.8 GB); exclusive single-load slot",
+      "size_gb": 13.79,
+      "stage": 3,
+      "enabled": false,
+      "role": "heavy-reason",
+      "litellm_route": ""
+    },
+    {
+      "action": "pull",
+      "model": "deepseek-r1:32b",
+      "reason": "REJECTED gpu-host-16GB — Needs heavy CPU offload; poor on 6c/12t",
+      "size_gb": 19.85,
+      "stage": 4,
+      "enabled": false,
+      "role": "",
+      "litellm_route": ""
+    },
+    {
+      "action": "pull",
+      "model": "deepseek-v3:latest",
+      "reason": "REJECTED gpu-host-16GB — Full MoE impossible on 16 GB",
+      "size_gb": 404.0,
+      "stage": 4,
+      "enabled": false,
+      "role": "",
+      "litellm_route": ""
+    },
+    {
+      "action": "pull",
+      "model": "qwen3-coder:30b",
+      "reason": "REJECTED gpu-host-16GB — Quality pick / wrong host for multi-model agent fabric",
+      "size_gb": 18.56,
+      "stage": 4,
+      "enabled": false,
+      "role": "",
+      "litellm_route": ""
+    },
+    {
+      "action": "pull",
+      "model": "gemma4:26b",
+      "reason": "REJECTED gpu-host-16GB — Tight without IQ quant; use HF IQ only if quality chase",
+      "size_gb": 18.0,
+      "stage": 4,
+      "enabled": false,
+      "role": "",
+      "litellm_route": ""
+    },
+    {
+      "action": "pull",
+      "model": "qwen3.5:27b",
+      "reason": "REJECTED gpu-host-16GB — Tight single-load; prefer 9b daily + 14b deepseek",
+      "size_gb": 17.42,
+      "stage": 4,
+      "enabled": false,
+      "role": "",
+      "litellm_route": ""
+    }
+  ],
+  "last_audit_at": "2026-07-16T00:22:40+00:00",
+  "last_apply_at": "2026-07-16T01:04:00+00:00",
+  "apply_notes": [
+    "Stage 1 applied via remote API pull to <gpu-host-ip>:11434: nomic-embed-text-v2-moe, translategemma:4b, deepseek-r1:14b all OK.",
+    "Multi-path storage intentionally retained (service dir + ~/.ollama + /MCP_WIP/ollama) until Unraid NFS v4.2 boot-mount merge.",
+    "OLLAMA_HOST=0.0.0.0:11434 via /etc/systemd/system/ollama.service.d/lan.conf (native LAN bind; no socat).",
+    "Stage 2 reclaim applied 2026-07-16: deleted gemma3:12b + huihui_ai/jan-nano-abliterated:4b; abliterated policy = remove."
+  ]
+}
