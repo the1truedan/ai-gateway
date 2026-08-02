@@ -93,7 +93,7 @@ ionice -c3 nice -n19 python3 scripts/verify_quarantine_duals.py \
 | Host | Full-pool hash / deepscan |
 |------|---------------------------|
 | **Tower** | Yes — `/mnt/ai-data` local |
-| M4RV / MRGPU | Local disks only; use catalog, not NFS deepwalk |
+| Mac workstation / GPU worker | Local disks only; use catalog, not NFS deepwalk |
 | Agents | Structure inventory / catalog only |
 
 ## Living catalog (Johnny)
