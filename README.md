@@ -110,9 +110,9 @@ care when we cannot be there?*
 ### Phase 1 — orchestration testing
 
 `ai-gateway` grew as **parallel infrastructure** next to the caregiving monorepo
-(`grokcode`): multi-host routing (desk Mac mini M4 24 GB, GPU host, Unraid
-Tower), LiteLLM + Headroom as one door, smoke checks so agents fail *before*
-a long session if the stack is dead.
+(`grokcode` / M.A.N.A.G.E.R.): multi-host routing (desk Mac, GPU host, NAS),
+LiteLLM + Headroom as one door, smoke checks so agents fail *before* a long
+session if the stack is dead.
 
 ### Phase 2 — local LLM code-agent framework
 
@@ -126,10 +126,19 @@ ACL Phase 1 deadline **31 July 2026**: multi-model collaboration (Grok, Claude,
 ChatGPT), best concrete step per session, **git as ground truth**, then
 sanitized public mirrors.
 
+### Phase 4 — the checklist that was always there
+
+While M.A.N.A.G.E.R. development named agents and ethics gates, this repo
+quietly **ticked orchestrator requirements**: one door, local-first, PHI-local
+roles, spend visibility, multi-host, fail-early smoke. Fluke or divine project
+management — either way the boxes light up. Full creative path + checkbox map:
+
+**→ [`docs/STORY_PARALLEL_PATHS.md`](./docs/STORY_PARALLEL_PATHS.md)**
+
 ### Where **ai-data** fits
 
 Models, Pinokio trees, git mirrors, and caches outgrew per-machine disks.
-**ai-data** on Tower (NVMe + Btrfs + bees + NFS) is the shared pool.
+**ai-data** on the NAS pool (NVMe + Btrfs + bees + NFS) is the shared house.
 **fast-models** is that storage plane. Gateway without storage is a doorbell
 with no house behind it.
 
