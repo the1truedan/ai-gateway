@@ -130,10 +130,14 @@ sanitized public mirrors.
 
 While M.A.N.A.G.E.R. development named agents and ethics gates, this repo
 quietly **ticked orchestrator requirements**: one door, local-first, PHI-local
-roles, spend visibility, multi-host, fail-early smoke. Fluke or divine project
-management — either way the boxes light up. Full creative path + checkbox map:
+roles, spend visibility, multi-host, fail-early smoke. The path there ran through
+**paywalls**, **stateless chat anxiety**, and a long Grok thread that hopped
+twitter.com → grok.com → WebUI → Open WebUI history ingest → Grok Build / local
+agents — until **ai-gateway** became the solver conduit and **grok-tua / tok-tua /
+mok-tua** grew meters and creative tooling *during* ACL last legs and caregiver
+hours. Fluke or divine project management — either way the boxes light up.
 
-**→ [`docs/STORY_PARALLEL_PATHS.md`](./docs/STORY_PARALLEL_PATHS.md)**
+**→ [`docs/STORY_PARALLEL_PATHS.md`](./docs/STORY_PARALLEL_PATHS.md)** (full path + checkbox map)
 
 ### Where **ai-data** fits
 
