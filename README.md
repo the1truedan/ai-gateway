@@ -70,7 +70,29 @@ doorbell with no house behind it.
 - Operator notes for a small multi-machine fleet
 
 This public tree is **sanitized** for release. Home secrets, private care
-data, and LAN specifics stay off GitHub.
+data, and raw LAN IPs stay off GitHub (roles like `gpu-host` / `nas-host`
+instead).
+
+## Shared AI pool, bees, and dashboards
+
+The storage plane next to this gateway uses Btrfs + **bees** (block dedupe)
+and a separate **content-hash** dual ladder (file-level candidates). Those are
+easy to confuse — we published the runbooks and a Grafana board so others can
+copy the pattern:
+
+| Path | What |
+|------|------|
+| [`docs/ops/bees/`](./docs/ops/bees/) | Hash sizing HOWTO, **4 G** considerations, 2026-08-01 incident history, Grafana/cron shape, L1/L2/L3 ladder |
+| [`config/observability/ai-data-bees-dashboard.json`](./config/observability/ai-data-bees-dashboard.json) | Importable Grafana dashboard (Prometheus) |
+| [`deploy/unraid-fast-models/`](./deploy/unraid-fast-models/) | Sketch of the Unraid “fast-models” pool stack |
+
+**4 G short version:** bees fingerprint table size is *not* disk fullness.
+We grew **1 G → 2 G → 4 G** when occupancy hit ~100% on a ~1.5 TiB-used pool.
+Sticky RAM ≈ table size; only grow after a full re-crawl still saturates the
+table, and never enable format flags for a resize.
+
+Related design repo: [johnny-appleseed-chipper](https://github.com/the1truedan/johnny-appleseed-chipper)
+(process templates for inventory / dual-verify / public handoff).
 
 ## Quick start (sketch)
 
