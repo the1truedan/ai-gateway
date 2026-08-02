@@ -1,119 +1,193 @@
 # ai-gateway
 
 One front door for the models and tools in a home AI lab — chat UIs, coding
-agents, and scripts all aim at the same local gateway instead of five different
-API bases and five different excuses when something is down.
+agents, and scripts aim at the same local gateway instead of five different
+API bases and five different failure modes.
+
+This repo is **glue and ops**, not a from-scratch model runtime. The value is
+wiring known open-source pieces so they behave as one stack.
+
+## Stack map (what is actually in play)
+
+Clients and agents talk to **Headroom** (`:8787`) for a thrifty path, which
+forwards to **LiteLLM** (`:4000`). LiteLLM fans out to local runtimes
+(**Ollama**, **TurboQuant**-backed llama-server / optional **vLLM**), cloud
+providers you configure, and optional lab services (search, memory, vision).
+
+```text
+  Open WebUI / Pi / OMP / OpenCode / Codex / Claude Code / Cursor
+            │
+            ▼
+      Headroom :8787          ← token / context conservation proxy
+            │
+            ▼
+      LiteLLM  :4000          ← OpenAI-compatible router + spend
+     ┌──────┼──────────────┐
+     ▼      ▼              ▼
+  Ollama  TurboQuant    cloud APIs (optional)
+  :11434  :8081/:8082   OpenRouter / xAI / …
+     │
+     └─ shared weights/cache often live on ai-data (fast-models + bees)
+```
+
+### Core path
+
+| Piece | Role in this stack | Upstream |
+|-------|--------------------|----------|
+| **[Headroom](https://github.com/chopratejas/headroom)** | Default client entry (`:8787`); conserves context/tokens before LiteLLM. Image: `ghcr.io/chopratejas/headroom` | [chopratejas/headroom](https://github.com/chopratejas/headroom) |
+| **[LiteLLM](https://github.com/BerriAI/litellm)** | OpenAI-compatible multi-provider router, aliases (`manager-*` / `tier-*`), spend UI | [BerriAI/litellm](https://github.com/BerriAI/litellm) · [docs](https://docs.litellm.ai/) |
+| **[Ollama](https://github.com/ollama/ollama)** | Local model serve (`:11434`); common fallback when TurboQuant is down | [ollama/ollama](https://github.com/ollama/ollama) |
+| **TurboQuant-backed local servers** | Host `llama-server`-style endpoints (`:8081` reason, `:8082` coder) for quantized / long-context local work | Method: [TurboQuant paper](https://arxiv.org/abs/2504.19874); ecosystem includes [vLLM TurboQuant notes](https://vllm.ai/blog/2026-05-11-turboquant) and community `llama.cpp` / server integrations |
+| **[Open WebUI](https://github.com/open-webui/open-webui)** | Browser chat UI pointed at Headroom (or LiteLLM bypass) | [open-webui/open-webui](https://github.com/open-webui/open-webui) |
+| **Docker Compose / Postgres / Redis** | Process layout and LiteLLM DB | Docker, [postgres](https://www.postgresql.org/), [redis](https://redis.io/), [pgvector](https://github.com/pgvector/pgvector) |
+
+### Coding agents (pointed at the gateway)
+
+| Agent / harness | How it fits | Upstream |
+|-----------------|-------------|----------|
+| **[Pi](https://github.com/badlogic/pi-mono)** | Terminal coding agent; models JSON → Headroom | [badlogic/pi-mono](https://github.com/badlogic/pi-mono) |
+| **[Oh My Pi (OMP)](https://github.com/acidsugarx/oh-my-pi)** | Pi-oriented harness / tooling (model lists under `config/clients/omp.*.yml`) | [acidsugarx/oh-my-pi](https://github.com/acidsugarx/oh-my-pi) |
+| **[OpenCode](https://github.com/anomalyco/opencode)** | Terminal coding agent; provider snippets → Headroom | [anomalyco/opencode](https://github.com/anomalyco/opencode) · [opencode.ai](https://opencode.ai) |
+| **Claude Code / Codex / Cursor / Grok Build** | Third-party CLIs/IDEs using the same `OPENAI_BASE_URL` → Headroom or LiteLLM | Anthropic, OpenAI, Cursor, xAI respectively |
+
+Lab launchers that sit *beside* those CLIs:
+
+| Repo | Role |
+|------|------|
+| **[grok-tua-tok-tua](https://github.com/the1truedan/grok-tua-tok-tua)** | Launch coding CLIs next to a live health/spend pane |
+
+### Optional profiles (compose)
+
+| Piece | Role | Upstream |
+|-------|------|----------|
+| **[Hister](https://github.com/asciimoo/hister)** | Local search (`:4433`); profile `search` | [asciimoo/hister](https://github.com/asciimoo/hister) · image `ghcr.io/asciimoo/hister` |
+| **[botmem](https://github.com/botmem/botmem)** | Personal / life memory SoR (compose profile `memory`) | [botmem/botmem](https://github.com/botmem/botmem) · images `ghcr.io/botmem/botmem` |
+| **[hippo-memory](https://github.com/kitfunso/hippo-memory)** | Agent/coding memory under `.hippo/` per repo (host MCP, not the same as botmem) | [kitfunso/hippo-memory](https://github.com/kitfunso/hippo-memory) · npm `hippo-memory` |
+| **[Turnstone](https://github.com/turnstonelabs/turnstone)** | Optional agent/orchestration client path through Headroom | [turnstonelabs/turnstone](https://github.com/turnstonelabs/turnstone) |
+| **AIDA / vision-embed / prompt-io** | Lab services in `services/` (document helpers, embeddings, metrics) | This repo (sanitized) |
+| **llmtrace-proxy** | Optional request tracing | `ghcr.io/techlab-innov/llmtrace-proxy` |
+
+botmem ≠ hippo: life memory vs agent/project memory. See `config/clients/memory_platform.md` in full trees.
+
+### Storage plane (shared weights, not the chat stack)
+
+| Piece | Role | Upstream |
+|-------|------|----------|
+| **[fast-models](https://github.com/the1truedan/fast-models)** | Unraid Docker stack: dual NVMe → Btrfs pool → NFS **ai-data** | This org |
+| **[bees](https://github.com/Zygo/bees)** | Best-Effort Extent-Same — Btrfs online dedupe agent | [Zygo/bees](https://github.com/Zygo/bees) |
+| **Prometheus + Grafana** | Metrics / bees occupancy dashboards | [prometheus](https://prometheus.io/) · [grafana](https://grafana.com/) |
+
+Ops notes we published from real incidents: [`docs/ops/bees/`](./docs/ops/bees/).
+
+### Creative / story path (sibling labs)
+
+| Repo | Role | Typical underlying tools |
+|------|------|---------------------------|
+| **[mok-tua](https://github.com/the1truedan/mok-tua)** | Script → storyboard stills → optional video | Uses this gateway for LLM expand; **[ComfyUI](https://github.com/comfyanonymous/ComfyUI)** (+ Wan / AnimateDiff / Qwen LoRAs on the model pool) for pixels |
+| **ocr-tua** (when published) | Thin OCR/vision HTTP service | Local vision backends |
+
+### Design / custody (docs)
+
+| Repo | Role |
+|------|------|
+| **[johnny-appleseed-chipper](https://github.com/the1truedan/johnny-appleseed-chipper)** | Process templates for inventory, content-hash duals, public handoff (not a runtime) |
+
+---
 
 ## How this came to be
 
 This did **not** start as a product pitch.
 
 **22 March 2026** — earliest “vibecoding” on record: Grok chats about surplus
-hardware and a homelab. No caregiving mission yet; just curiosity and spare
-parts.
+hardware and a homelab.
 
 **13 April 2026** — the pivot. Real-world harm around my mother’s care made the
-hobby stop being a hobby. Within a week I was in Gateway Technical College’s
-AI/ML certificate program, the ACL caregiver prize path opened, and
-**M.A.N.A.G.E.R. LLC** was formed (Delaware, 20 April 2026). The question became:
-*how do you prepare for the care when we cannot be there?*
+hobby stop being a hobby. Within a week: Gateway Technical College’s AI/ML
+certificate program, the ACL caregiver prize path, and **M.A.N.A.G.E.R. LLC**
+(Delaware, 20 April 2026). The question became: *how do you prepare for the
+care when we cannot be there?*
 
-### Phase 1 — orchestration testing for M.A.N.A.G.E.R. core
+### Phase 1 — orchestration testing
 
-`ai-gateway` began as **parallel infrastructure work** next to the main
-caregiving monorepo (`grokcode`). The monorepo held agents, compliance, and
-story. The gateway was where we tested:
-
-- multi-host routing (**Mac mini M4, 24 GB** as the main desk machine — not a
-  laptop — plus a GPU box and Unraid “Tower”)
-- a single OpenAI-compatible door (LiteLLM) with a thrifty front door (Headroom)
-- smoke checks so a coding agent could tell *before* a long session that the
-  stack was alive
-
-If core M.A.N.A.G.E.R. was the brain, this was the nervous system on the LAN.
+`ai-gateway` grew as **parallel infrastructure** next to the caregiving monorepo
+(`grokcode`): multi-host routing (desk Mac mini M4 24 GB, GPU host, Unraid
+Tower), LiteLLM + Headroom as one door, smoke checks so agents fail *before*
+a long session if the stack is dead.
 
 ### Phase 2 — local LLM code-agent framework
 
-Once the routes worked, the same stack became the place **coding CLIs** lived:
-Claude Code, Codex, Grok Build, Cursor, and friends all pointed at local
-`manager-*` models or careful cloud tiers. Tools like **grok-tua** / **tok-tua**
-grew up around that: launch a CLI, watch health and spend, refuse the wrong
-tier for sensitive work.
+Same door became the base URL for **Pi / OMP / OpenCode / Claude Code / Codex /
+Cursor / Grok Build**. **grok-tua / tok-tua** launch those CLIs and watch
+health/spend.
 
-### Phase 3 — cloud LLMs as co-workers under deadline
+### Phase 3 — cloud as co-workers under deadline
 
-ACL Phase 1 had a hard clock (**31 July 2026**). One person cannot type every
-line. So the pattern became honest multi-model collaboration:
-
-- long design and “what should this even be?” sessions with **Grok**, **Claude**,
-  and **ChatGPT**
-- take the **best concrete step** from each session, not the prettiest paragraph
-- keep a **local git repo** as the ground truth (no “the chat is the product”)
-- only after the ACL package went out did the sanitized trees start landing as
-  **public GitHub** releases
-
-That is the arc: chitter-chatter → decisions → commits → public repos.
+ACL Phase 1 deadline **31 July 2026**: multi-model collaboration (Grok, Claude,
+ChatGPT), best concrete step per session, **git as ground truth**, then
+sanitized public mirrors.
 
 ### Where **ai-data** fits
 
-Models, Pinokio trees, git mirrors, and caches grew too large to duplicate on
-every machine. **ai-data** is the shared pool on Tower (NVMe + Btrfs + bees +
-NFS) so the gateway hosts pull weights and assets from one place. The
-`fast-models` repo is that storage plane. Gateway without storage is a
-doorbell with no house behind it.
+Models, Pinokio trees, git mirrors, and caches outgrew per-machine disks.
+**ai-data** on Tower (NVMe + Btrfs + bees + NFS) is the shared pool.
+**fast-models** is that storage plane. Gateway without storage is a doorbell
+with no house behind it.
 
-## What you get here
+---
+
+## What you get in *this* tree
 
 - Compose files for Mac / Linux / Unraid-shaped layouts
-- LiteLLM as the common API; Headroom as the default thrifty path
-- Optional profiles: search, memory, vision, document helpers
-- Operator notes for a small multi-machine fleet
+- LiteLLM configs + Headroom as the default thrifty path
+- Client snippets for Pi, OMP, OpenCode, and friends (`config/clients/`)
+- Optional profiles: search (Hister), memory (botmem), vision, document helpers
+- Operator notes, Prometheus scrape sketch, bees/Grafana public ops docs
 
-This public tree is **sanitized** for release. Home secrets, private care
-data, and raw LAN IPs stay off GitHub (roles like `gpu-host` / `nas-host`
-instead).
+This public tree is **sanitized**. Home secrets, private care data, and raw
+LAN IPs stay off GitHub (roles like `gpu-host` / `nas-host` instead).
 
 ## Shared AI pool, bees, and dashboards
 
-The storage plane next to this gateway uses Btrfs + **bees** (block dedupe)
-and a separate **content-hash** dual ladder (file-level candidates). Those are
-easy to confuse — we published the runbooks and a Grafana board so others can
-copy the pattern:
-
 | Path | What |
 |------|------|
-| [`docs/ops/bees/`](./docs/ops/bees/) | Hash sizing HOWTO, **4 G** considerations, 2026-08-01 incident history, Grafana/cron shape, L1/L2/L3 ladder |
-| [`config/observability/ai-data-bees-dashboard.json`](./config/observability/ai-data-bees-dashboard.json) | Importable Grafana dashboard (Prometheus) |
-| [`deploy/unraid-fast-models/`](./deploy/unraid-fast-models/) | Sketch of the Unraid “fast-models” pool stack |
+| [`docs/ops/bees/`](./docs/ops/bees/) | Hash sizing HOWTO, **4 G** considerations, 2026-08-01 incident, Grafana/cron shape, L1/L2/L3 ladder |
+| [`config/observability/ai-data-bees-dashboard.json`](./config/observability/ai-data-bees-dashboard.json) | Importable Grafana dashboard |
+| [`deploy/unraid-fast-models/`](./deploy/unraid-fast-models/) | Sketch of the Unraid pool stack |
 
-**4 G short version:** bees fingerprint table size is *not* disk fullness.
-We grew **1 G → 2 G → 4 G** when occupancy hit ~100% on a ~1.5 TiB-used pool.
-Sticky RAM ≈ table size; only grow after a full re-crawl still saturates the
-table, and never enable format flags for a resize.
-
-Related design repo: [johnny-appleseed-chipper](https://github.com/the1truedan/johnny-appleseed-chipper)
-(process templates for inventory / dual-verify / public handoff).
+**4 G short version:** bees fingerprint table size ≠ disk fullness. We grew
+**1 G → 2 G → 4 G** when occupancy hit ~100% on a ~1.5 TiB-used pool. Sticky
+RAM ≈ table size; only grow after a full re-crawl still saturates the table.
 
 ## Quick start (sketch)
 
-See Compose files in-repo and `IDEA.md` for the mental model. You will need
-your own model backends (Ollama, vLLM, cloud keys, etc.) — nothing here claims
-to be a turnkey hospital product.
-
 ```bash
-# typical shape (adapt to your host)
-cp .env.example .env   # if present
+cp .env.example .env   # if present — fill your own keys
 docker compose up -d
+# thrifty path for clients:
+#   export OPENAI_BASE_URL=http://127.0.0.1:8787/v1
+# raw LiteLLM (bypass Headroom):
+#   export OPENAI_BASE_URL=http://127.0.0.1:4000/v1
 ```
 
-## Related public pieces
+You bring backends (Ollama, TurboQuant/llama-server, cloud keys). Nothing here
+is a turnkey clinical product.
+
+## Related public pieces (this org)
 
 | Repo | Role |
 |------|------|
 | [fast-models](https://github.com/the1truedan/fast-models) | Shared NVMe pool (ai-data) |
 | [grok-tua-tok-tua](https://github.com/the1truedan/grok-tua-tok-tua) | Coding-CLI launchers + status panes |
 | [mok-tua](https://github.com/the1truedan/mok-tua) | Script → storyboard pipeline |
-| [shreddit](https://github.com/the1truedan/shreddit) | Side utility — first public OSS release timed with ACL |
+| [johnny-appleseed-chipper](https://github.com/the1truedan/johnny-appleseed-chipper) | Inventory / dual-verify process templates |
+| [shreddit](https://github.com/the1truedan/shreddit) | Side utility — first public OSS timed with ACL |
+
+## License / credit
+
+Compose and configs here are released under the repo [LICENSE](./LICENSE).
+**Upstream projects keep their own licenses** — always follow Headroom, LiteLLM,
+Ollama, Open WebUI, Pi, OpenCode, bees, botmem, hippo-memory, etc. when you
+redistribute or run them.
 
 ---
 
