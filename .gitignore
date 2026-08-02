@@ -1,14 +1,34 @@
+# Secrets / local env (never publish)
 .env
+.env.*
+.envrc
+*.env.local
+*.pem
+*.key
+!.env.example
+!**/.env.example
+
+# Generated / local-only configs
 litellm_data/
+litellm_config*.merged.yaml
 openrouter_free_models.generated.yaml
 import-data/
-*.log
+artifacts/
+logs/
+node_modules/
+.venv/
+**/.venv/
 services/vision_embed/.venv/
+
+# Caches / agent memory / editor noise
+*.log
 __pycache__/
 *.pyc
 .hippo/
-
 .DS_Store
 **/.DS_Store
 .aider.chat.history.md
 .aider.input.history
+.mcp.json
+*.bak
+*.bak-*
