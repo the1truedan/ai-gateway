@@ -2,7 +2,7 @@
 
 # HOWTO: Size and grow the bees hash table (ai-data / fast-models)
 
-**Audience:** anyone operating the Tower `fast-models` pool.  
+**Audience:** anyone operating the NAS `fast-models` pool.  
 **Related incident:** `docs/operations/BEES_HASH_SIZE_INCIDENT_2026-08-01.md`  
 **Metrics:** Grafana dashboard **ai-data / bees dedupe**
 
@@ -13,12 +13,12 @@ When two chunks of the pool look the same, it can share the physical copy on
 Btrfs. That phone book has a fixed size:
 
 - Too small → book fills up, bees forgets old entries, works harder, dedupes less well.  
-- Too large → steals RAM from everything else on Tower (and this host has **no swap**).
+- Too large → steals RAM from everything else on the NAS host (and this host has **no swap**).
 
 The phone book size is **not** “how full the disk is.” A full hash table can
 happen while you still have terabytes free.
 
-## Current production defaults (Tower, after 2026-08-01)
+## Current production defaults (NAS host, after 2026-08-01)
 
 | Setting | Value | Notes |
 |---------|--------|--------|

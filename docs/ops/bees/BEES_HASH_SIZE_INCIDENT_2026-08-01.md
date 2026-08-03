@@ -5,7 +5,7 @@
 ## Summary
 
 The online Btrfs dedupe agent **bees** (inside the `fast-models` container on
-Tower) had been running with a **1 G** fingerprint hash table
+NAS host) had been running with a **1 G** fingerprint hash table
 (`BEES_HASH_SIZE=1G`). On a pool with roughly **1.57 TiB** of Btrfs Data used,
 that table hit **100% occupancy**. bees kept running, but it had to **evict**
 old fingerprints, so it spent more time re-hashing and missed dedupe
@@ -16,7 +16,7 @@ host RAM.
 **Fixed the same day:** hash table grown carefully **1 G → 2 G** (morning),
 then **2 G → 4 G** (evening) after 2 G re-filled to **99%** occupancy.
 Each step: fresh empty table + crawl reset; container and NFS left up.
-Grafana tracks occupancy and bees health. Logs on Tower:
+Grafana tracks occupancy and bees health. Logs on the NAS host:
 `.../logs/bees-hash-resize-2g.log`, `.../logs/bees-hash-resize-4g.log`.
 
 ## What people might misread
@@ -67,7 +67,7 @@ Grafana tracks occupancy and bees health. Logs on Tower:
 7. Verified: process up, file **2.0 G**, RSS ~2 GiB, occupancy ~0 (expected
    until re-crawl fills it), pool still mounted, marker file present.
 
-Log on Tower:
+Log on the NAS host:
 `/mnt/user/appdata/fast-models/logs/bees-hash-resize-2g.log`
 
 Backups (delete after a stable day):
@@ -82,7 +82,7 @@ Backups (delete after a stable day):
 |--|-----|----------------------|
 | Extra sticky RAM vs 1 G | +~1 GiB | +~3 GiB |
 | When | Morning (1 G at 100%) | Evening (2 G re-filled to 99% after re-crawl) |
-| Host fit (31 GiB, **no swap**) | Comfortable | OK with MemAvailable ≳ 20 GiB at resize; watch if large local LLMs park on Tower |
+| Host fit (31 GiB, **no swap**) | Comfortable | OK with MemAvailable ≳ 20 GiB at resize; watch if large local LLMs park on the NAS host |
 | Procedure | Fresh empty table, crawl reset, bees-only restart | Same |
 
 **Do not** grow past 4 G without another full re-crawl + occupancy ≳ 0.95
@@ -104,5 +104,5 @@ See also: `docs/HOWTO_BEES_HASH_SIZING.md`,
 ## Related
 
 - Grafana: `http://NAS_HOST:3002/d/ai-data-bees-dedupe`
-- Stack: `fast-models` on Tower; GitHub mirror `the1truedan/fast-models`
-- Tower disk incident context (separate): `SESSION_HANDOFF_2026-07-28_TOWER_INCIDENT.md`
+- Stack: `fast-models` on the NAS host; GitHub mirror `the1truedan/fast-models`
+- NAS disk incident context (separate; private ops notes, not in this tree)

@@ -1220,7 +1220,7 @@
     "ai-data",
     "bees",
     "dedup",
-    "tower",
+    "nas-host",
     "btrfs"
   ],
   "templating": {

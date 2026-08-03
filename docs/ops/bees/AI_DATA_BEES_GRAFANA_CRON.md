@@ -2,9 +2,9 @@
 
 # ai-data / bees: Grafana dashboard + overnight cron
 
-**Deployed:** 2026-08-01 on Tower (`NAS_HOST`)  
+**Deployed:** 2026-08-01 on the NAS host (`NAS_HOST`)  
 **Grafana:** `http://NAS_HOST:3002` → dashboard **ai-data / bees dedupe** (`uid: ai-data-bees-dedupe`)  
-**Prometheus:** `http://NAS_HOST:9090` (scrapes `tower-node-exporter` textfile collector)
+**Prometheus:** `http://NAS_HOST:9090` (scrapes `nas-node-exporter` textfile collector)
 
 **Hash sizing:** production table is **4 G** (1 G→2 G morning 2026-08-01 at 100%; 2 G→4 G evening when re-crawl hit 99%).  
 See `docs/HOWTO_BEES_HASH_SIZING.md` and incident
@@ -58,11 +58,11 @@ Heartbeats (for Grafana “cron age” panels):
 
 Do not treat (2) as bees savings.
 
-## Repo sources (copy to Tower)
+## Repo sources (copy to NAS host)
 
-| Repo path | Tower path |
+| Repo path | NAS host path |
 |-----------|------------|
-| `deploy/tower/exporters/*.sh` | `/mnt/user/appdata/manager-orchestration/exporters/` |
+| `deploy/unraid-fast-models/exporters/*.sh` (or local ops tree) | `/mnt/user/appdata/manager-orchestration/exporters/` |
 | `config/observability/ai-data-bees-dashboard.json` | Grafana import (uid `ai-data-bees-dedupe`) |
 | `scripts/deepscan_ai_data_dedup.py` + `scripts/lib/dedup_engine.py` | `/root/dedup-tool/` (sync engine fix before audit) |
 | `config/ai_data_dedup_buckets.json` | `/root/dedup-tool/config/` |
@@ -115,5 +115,5 @@ If `bees_hash_table_occupancy_ratio` stays ~1.0, bees is thrashing/evicting and 
 ## Guardrails
 
 - Overnight audit is **report-only** (no delete/symlink/merge).  
-- Scans must stay **host-local on Tower** (`/ai-data` inside `fast-models`), never NFS client from Mac workstation / GPU worker.  
-- Do not commit Grafana admin passwords; import uses Tower-local `.env` only.
+- Scans must stay **host-local on the NAS host** (`/ai-data` inside `fast-models`), never NFS client from Mac workstation / GPU worker.  
+- Do not commit Grafana admin passwords; import uses NAS-local `.env` only.

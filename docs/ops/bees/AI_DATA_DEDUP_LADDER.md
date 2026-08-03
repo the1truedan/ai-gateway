@@ -43,7 +43,7 @@ exact size → sample_hash (4 MiB head/tail) → full SHA256 only on multi-membe
 ### Important: scripts are NOT on the ai-data pool
 
 `/ai-data` (or `/mnt/ai-data`) has models/pinokio/… only. Repo tools live in
-**``<manager monorepo>``** and must be synced to Tower **`/root/dedup-tool/`** (same layout
+**``<manager monorepo>``** and must be synced to the NAS host **`/root/dedup-tool/`** (same layout
 the overnight audit cron already expects). Inside the `fast-models` console you
 only see pool mounts — `python3 scripts/...` will always fail until tools are
 staged.
@@ -51,7 +51,7 @@ staged.
 | Where | Path |
 |-------|------|
 | Mac repo | ``<manager monorepo>`/scripts/verify_quarantine_duals.py` |
-| Tower host cache | `/root/dedup-tool/scripts/` + `lib/dedup_engine.py` |
+| NAS host cache | `/root/dedup-tool/scripts/` + `lib/dedup_engine.py` |
 | Inside container at run | `/tmp/dedup-tool-*/scripts/` (docker cp’d for the job) |
 | Pool data root in container | **`/ai-data`** (not `/mnt/ai-data`) |
 | Quarantine wave | `/ai-data/.dedup_quarantine/prune-2026-08-01/` (hidden — `ls -la`) |
@@ -59,19 +59,19 @@ staged.
 ### Sync + run (preferred)
 
 ```bash
-# On Mac (SSH to Tower)
+# On operator workstation (SSH to NAS host)
 cd `<manager monorepo>`
-./scripts/sync_dedup_tool_to_tower.sh operator@nas-host
+./scripts/sync_dedup_tool_to_nas.sh operator@nas-host
 
-# On Tower host (Unraid root shell — not only docker console)
-/root/dedup-tool/scripts/run_verify_quarantine_on_tower.sh
+# On NAS host (Unraid root shell — not only docker console)
+/root/dedup-tool/scripts/run_verify_quarantine_on_nas.sh
 # optional: WAVE=prune-2026-08-01 COVERAGE=95 MAX_GB=50 ...
 ```
 
 ### Manual docker path (if you stay in console)
 
 ```bash
-# On Tower HOST first (has /root/dedup-tool after sync):
+# On NAS HOST first (has /root/dedup-tool after sync):
 docker cp /root/dedup-tool/scripts fast-models:/tmp/dedup-tool/scripts
 docker cp /root/dedup-tool/config  fast-models:/tmp/dedup-tool/config   # optional
 docker exec -it fast-models sh
@@ -92,7 +92,7 @@ ionice -c3 nice -n19 python3 scripts/verify_quarantine_duals.py \
 
 | Host | Full-pool hash / deepscan |
 |------|---------------------------|
-| **Tower** | Yes — `/mnt/ai-data` local |
+| **NAS host** | Yes — `/mnt/ai-data` local |
 | Mac workstation / GPU worker | Local disks only; use catalog, not NFS deepwalk |
 | Agents | Structure inventory / catalog only |
 
@@ -130,7 +130,7 @@ work/catalog/johnny-chipper/
 | `scripts/catalog_ai_data_models.py` | Sidecar catalog / `--johnny-chipper` |
 | `scripts/ai_data_structure_inventory.py` | Safe L0 walk |
 
-## Nightly (Tower)
+## Nightly (NAS host)
 
 Existing: `ai_data_dedup_audit_cron.sh` (report-only). Prefer:
 

@@ -32,18 +32,17 @@ GitHub’s three-commit public line was **not** a fast-forward of lab history (o
 | `/Users/dtm` or home absolute paths | **PASS** | None |
 | Email addresses | **PASS** | Only `you@example.com` style placeholders |
 | PHI / HIPAA | **PASS (semantic)** | Matches are **routing / policy keywords** (orchestrator refuses PHI, QQQ gates) — no patient records or caregiver PII |
-| Lab nicknames (M4RV/MRGPU) | **PASS after scrub** | Residual bees-doc lines genericized to “Mac workstation / GPU worker” |
+| Lab nicknames (M4RV/MRGPU/Tower) | **PASS after scrub** | Ops prose uses role labels (`NAS_HOST`, Mac workstation, GPU worker) — no lab computer nicknames in public tree |
 | Public identity | **INTENTIONAL** | GitHub user `the1truedan`, Linktree/Ko-fi, LICENSE copyright — expected for public OSS |
 | Generic volume defaults | **ACCEPTABLE** | `/Volumes/ai-data`, `/Volumes/models/…` as **Mac NFS convention defaults**, overridable by env |
-| Role name “Tower” / NAS | **ACCEPTABLE** | Ops docs use role labels (`NAS_HOST`, Tower as Unraid host role), not a public DNS name |
+| Host roles | **PASS** | `nas-host` / `gpu-host` / `mac-client` vocabulary only |
 
 ## Residual risks (accept before public)
 
-1. **Local untracked secrets** on the workstation (`.env`, `.env.bak-*`) — must stay gitignored; never `git add -f`.
+1. **Local untracked secrets** on the workstation (`.env`, `.env.bak-*`) — must stay gitignored; never `git add -f`. Local hostnames/IPs in runtime containers and untracked lab files are fine and **not** published.
 2. **`/Volumes/…` defaults** — generic but lab-flavored; operators should override via env (already supported).
 3. **Org cross-links** to private sibling repos (`mok-tua`, `grok-tua-tok-tua`, …) — links are fine; those repos may still be private.
-4. **bees / Grafana JSON** — includes panel labels like `tower`; not an IP, but lab-ish vocabulary.
-5. **History on GitHub `main`** is the **sanitized orphan root** only (good). Full lab history remains on Forgejo/local `lab-main` (keep private).
+4. **History on GitHub `main`** is the **sanitized orphan root** only (good). Full lab history remains on Forgejo/local `lab-main` (keep private).
 
 ## Hardening applied this pass
 
@@ -59,10 +58,11 @@ GitHub’s three-commit public line was **not** a fast-forward of lab history (o
 - [x] `.gitignore` hardened for local secrets
 - [x] Human skim of `README.md`, `.env.example`, `litellm_config*.yaml`, `docs/ops/bees/*`
 - [x] Confirm sibling private repos are OK to link (or switch links to public mirrors)
-- [ ] `gh repo edit the1truedan/ai-gateway --visibility public` **only after** explicit go-ahead
+- [x] `gh repo edit the1truedan/ai-gateway --visibility public` (2026-08-03)
+- [x] Scrub residual “Tower” lab nickname from bees ops docs + Grafana tag (2026-08-03 follow-up)
 - [ ] Optional: GitHub Topics + first Release tag `v0.1.0-public`
 
-## Re-check 2026-08-03 (README / assets retouch)
+## Re-check 2026-08-03 (README / assets retouch + host scrub)
 
 | Check | Result |
 |-------|--------|
@@ -72,6 +72,8 @@ GitHub’s three-commit public line was **not** a fast-forward of lab history (o
 | `litellm_config.mac-worker.yaml` | Worker aliases only; keys via `os.environ/…` |
 | Local `.env` / `.env.bak-*` | Still **gitignored** (never force-add) |
 | Personal narrative in README/STORY | **Intentional** public story (care pivot / ACL) — no addresses, phones, or clinical records |
+| Lab hostnames / LAN IPs on GitHub | **PASS** — no `192.168.*`; no M4RV/MRGPU; “Tower” prose → NAS host role language |
+| Local lab names/IPs | **OK on workstation only** — runtime orchestrator routes, Docker env, untracked `.env` |
 
 ## Verdict
 
