@@ -58,7 +58,7 @@ GitHub’s three-commit public line was **not** a fast-forward of lab history (o
 - [x] Automated scan clean of IPs / home paths / real keys / PHI data
 - [x] `.gitignore` hardened for local secrets
 - [x] Human skim of `README.md`, `.env.example`, `litellm_config*.yaml`, `docs/ops/bees/*`
-- [ ] Confirm sibling private repos are OK to link (or switch links to public mirrors)
+- [x] Confirm sibling private repos are OK to link (or switch links to public mirrors)
 - [ ] `gh repo edit the1truedan/ai-gateway --visibility public` **only after** explicit go-ahead
 - [ ] Optional: GitHub Topics + first Release tag `v0.1.0-public`
 
