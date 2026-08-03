@@ -32,7 +32,7 @@ GitHub’s three-commit public line was **not** a fast-forward of lab history (o
 | `/Users/dtm` or home absolute paths | **PASS** | None |
 | Email addresses | **PASS** | Only `you@example.com` style placeholders |
 | PHI / HIPAA | **PASS (semantic)** | Matches are **routing / policy keywords** (orchestrator refuses PHI, QQQ gates) — no patient records or caregiver PII |
-| Lab nicknames (M4RV/MRGPU/Tower) | **PASS after scrub** | Ops prose uses role labels (`NAS_HOST`, Mac workstation, GPU worker) — no lab computer nicknames in public tree |
+| Lab computer nicknames | **PASS after scrub** | Ops prose uses role labels (`NAS_HOST`, Mac workstation, GPU worker) only |
 | Public identity | **INTENTIONAL** | GitHub user `the1truedan`, Linktree/Ko-fi, LICENSE copyright — expected for public OSS |
 | Generic volume defaults | **ACCEPTABLE** | `/Volumes/ai-data`, `/Volumes/models/…` as **Mac NFS convention defaults**, overridable by env |
 | Host roles | **PASS** | `nas-host` / `gpu-host` / `mac-client` vocabulary only |
@@ -47,7 +47,7 @@ GitHub’s three-commit public line was **not** a fast-forward of lab history (o
 ## Hardening applied this pass
 
 - Expanded `.gitignore` for `.env.*`, `*.bak*`, `node_modules/`, `artifacts/`, merged litellm configs, venvs, logs.
-- Scrubbed remaining `M4RV`/`MRGPU` mentions in bees ops docs.
+- Scrubbed remaining lab computer nicknames in bees ops docs.
 - This scan report committed under `docs/`.
 
 ## Public switch checklist (manual)
@@ -59,7 +59,7 @@ GitHub’s three-commit public line was **not** a fast-forward of lab history (o
 - [x] Human skim of `README.md`, `.env.example`, `litellm_config*.yaml`, `docs/ops/bees/*`
 - [x] Confirm sibling private repos are OK to link (or switch links to public mirrors)
 - [x] `gh repo edit the1truedan/ai-gateway --visibility public` (2026-08-03)
-- [x] Scrub residual “Tower” lab nickname from bees ops docs + Grafana tag (2026-08-03 follow-up)
+- [x] Scrub residual lab host nicknames from bees ops docs + Grafana tags (2026-08-03 follow-up)
 - [ ] Optional: GitHub Topics + first Release tag `v0.1.0-public`
 
 ## Re-check 2026-08-03 (README / assets retouch + host scrub)
@@ -72,8 +72,8 @@ GitHub’s three-commit public line was **not** a fast-forward of lab history (o
 | `litellm_config.mac-worker.yaml` | Worker aliases only; keys via `os.environ/…` |
 | Local `.env` / `.env.bak-*` | Still **gitignored** (never force-add) |
 | Personal narrative in README/STORY | **Intentional** public story (care pivot / ACL) — no addresses, phones, or clinical records |
-| Lab hostnames / LAN IPs on GitHub | **PASS** — no `192.168.*`; no M4RV/MRGPU; “Tower” prose → NAS host role language |
-| Local lab names/IPs | **OK on workstation only** — runtime orchestrator routes, Docker env, untracked `.env` |
+| Lab hostnames / LAN IPs on GitHub | **PASS** — no RFC1918 IPs; role language only (`nas-host` / `gpu-host` / `mac-client`) |
+| Local lab names/IPs | **OK on workstation only** — runtime orchestrator routes, Docker env, untracked `.env` (not published) |
 
 ## Verdict
 
