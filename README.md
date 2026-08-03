@@ -30,6 +30,58 @@ providers you configure, and optional lab services (search, memory, vision).
      └─ shared weights/cache often live on ai-data (fast-models + bees)
 ```
 
+### Stack in pictures (local lab captures)
+
+Localhost screenshots of the live stack (Chrome · 2026-08-03). No LAN IPs or keys in frames.
+
+#### LiteLLM — OpenAI-compatible router
+
+<p align="center">
+  <img src="docs/assets/stack-local/capture-ai-gateway-litellm-swagger.png" alt="LiteLLM Swagger UI on localhost :4000" width="900" />
+</p>
+
+<p align="center"><em><b>LiteLLM</b> Swagger / OpenAPI on <code>:4000</code> — model hub, agents, MCP, and authorize surface. Upstream: <a href="https://github.com/BerriAI/litellm">BerriAI/litellm</a> (MIT).</em></p>
+
+<p align="center">
+  <img src="docs/assets/stack-local/capture-ai-gateway-litellm-ui.png" alt="LiteLLM Admin UI login" width="700" />
+</p>
+
+<p align="center"><em><b>LiteLLM Admin UI</b> (<code>:4000/ui</code>) — spend, keys, and model config after login. Capture is the login wall (session not stored in docs).</em></p>
+
+#### Headroom — thrifty front door
+
+<p align="center">
+  <img src="docs/assets/stack-local/capture-ai-gateway-headroom-ready.png" alt="Headroom readyz health JSON" width="700" />
+</p>
+
+<p align="center"><em><b>Headroom</b> <code>/readyz</code> on <code>:8787</code> — health/ready JSON clients should hit before long agent sessions. Upstream: <a href="https://github.com/chopratejas/headroom">chopratejas/headroom</a>.</em></p>
+
+#### Maintenance Deck — ops board (sibling monorepo)
+
+<p align="center">
+  <img src="docs/assets/stack-local/capture-ai-gateway-deck.png" alt="M.A.N.A.G.E.R. Maintenance Deck systems board" width="900" />
+</p>
+
+<p align="center"><em><b>Maintenance Deck</b> (M.A.N.A.G.E.R. control plane) — systems/stack board for Headroom · LiteLLM · Grafana · Prompt-I/O · CLI versions; launch pad for coding agents pointed at this gateway. Lives in the caregiver monorepo; probes this stack.</em></p>
+
+#### Prompt-I/O — prompt metrics side service
+
+<p align="center">
+  <img src="docs/assets/stack-local/capture-ai-gateway-prompt-io.png" alt="Prompt-I/O health JSON" width="500" />
+</p>
+
+<p align="center"><em><b>Prompt-I/O</b> <code>/health</code> on <code>:5050</code> — optional prompt metrics / review path used by the Deck and tok-tua boards.</em></p>
+
+#### ComfyUI — creative path (pixels, not chat)
+
+<p align="center">
+  <img src="docs/assets/stack-local/capture-ai-gateway-comfy-local.png" alt="ComfyUI local node graph" width="900" />
+</p>
+
+<p align="center"><em><b>ComfyUI</b> on localhost — stills/video graphs for story/creative work (e.g. <a href="https://github.com/the1truedan/mok-tua">mok-tua</a>). Not on the chat completion path; weights usually share the <a href="https://github.com/the1truedan/fast-models">fast-models</a> / ai-data pool. Upstream: <a href="https://github.com/Comfy-Org/ComfyUI">Comfy-Org/ComfyUI</a>.</em></p>
+
+Capture index: [`docs/assets/stack-local/AI_GATEWAY_CAPTURES.md`](./docs/assets/stack-local/AI_GATEWAY_CAPTURES.md).
+
 ### Core path
 
 | Piece | Role in this stack | Upstream |
