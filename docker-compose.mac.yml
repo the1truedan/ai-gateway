@@ -14,7 +14,10 @@ services:
       - GPU_HOST_LITELLM_API_BASE=${GPU_HOST_LITELLM_API_BASE:-http://<gpu-host-ip>:4000/v1}
       - NAS_HOST_LITELLM_API_BASE=${NAS_HOST_LITELLM_API_BASE:-http://<nas-host-ip>:4000/v1}
     volumes:
-      - ./litellm_config.yaml:/app/config.yaml:ro
+      # Worker bus only (manager-worker-m4-*). Full hub catalog lives in
+      # litellm_config.yaml for docs/other hosts; Mac control plane serves
+      # orchestration workers here so remount never drops local placement targets.
+      - ./litellm_config.mac-worker.yaml:/app/config.yaml:ro
       - shared-uv-cache:/shared/cache/uv
       - shared-models:/shared/models:ro
       - shared-code:/shared/code:ro

@@ -85,7 +85,8 @@ services:
       # Fail-open: if prompt-io is down, scans timeout quickly and requests still succeed.
       - PROMPT_IO_ENABLED=${PROMPT_IO_ENABLED:-1}
       - PROMPT_IO_BLOCK=${PROMPT_IO_BLOCK:-0}
-    entrypoint: ["/bin/sh", "/app/scripts/start_litellm.sh"]
+    # bash required: start_litellm.sh uses BASH_SOURCE (sh → bad substitution)
+    entrypoint: ["/bin/bash", "/app/scripts/start_litellm.sh"]
     restart: unless-stopped
     depends_on:
       litellm-db:

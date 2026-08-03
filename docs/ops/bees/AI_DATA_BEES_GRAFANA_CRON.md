@@ -115,5 +115,5 @@ If `bees_hash_table_occupancy_ratio` stays ~1.0, bees is thrashing/evicting and 
 ## Guardrails
 
 - Overnight audit is **report-only** (no delete/symlink/merge).  
-- Scans must stay **host-local on Tower** (`/ai-data` inside `fast-models`), never NFS client from M4RV/MRGPU.  
+- Scans must stay **host-local on Tower** (`/ai-data` inside `fast-models`), never NFS client from Mac workstation / GPU worker.  
 - Do not commit Grafana admin passwords; import uses Tower-local `.env` only.

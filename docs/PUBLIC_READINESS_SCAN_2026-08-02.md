@@ -62,6 +62,17 @@ GitHub’s three-commit public line was **not** a fast-forward of lab history (o
 - [ ] `gh repo edit the1truedan/ai-gateway --visibility public` **only after** explicit go-ahead
 - [ ] Optional: GitHub Topics + first Release tag `v0.1.0-public`
 
+## Re-check 2026-08-03 (README / assets retouch)
+
+| Check | Result |
+|-------|--------|
+| README hero media | Mermaid routing + vendored Headroom savings + hippo SVG (no empty admin/JSON heroes) |
+| `docs/assets/upstream/*` | Apache-2.0 Headroom PNG + hippo SVG + attribution README |
+| `config/hosts/mac.env` | NAS addr is hostname placeholder (`nas-host.local`), not RFC1918 |
+| `litellm_config.mac-worker.yaml` | Worker aliases only; keys via `os.environ/…` |
+| Local `.env` / `.env.bak-*` | Still **gitignored** (never force-add) |
+| Personal narrative in README/STORY | **Intentional** public story (care pivot / ACL) — no addresses, phones, or clinical records |
+
 ## Verdict
 
 **Staged for public switch: CONDITIONAL GO.**  

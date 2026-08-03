@@ -14,73 +14,172 @@ forwards to **LiteLLM** (`:4000`). LiteLLM fans out to local runtimes
 (**Ollama**, **TurboQuant**-backed llama-server / optional **vLLM**), cloud
 providers you configure, and optional lab services (search, memory, vision).
 
-```text
-  Open WebUI / Pi / OMP / OpenCode / Codex / Claude Code / Cursor
-            │
-            ▼
-      Headroom :8787          ← token / context conservation proxy
-            │
-            ▼
-      LiteLLM  :4000          ← OpenAI-compatible router + spend
-     ┌──────┼──────────────┐
-     ▼      ▼              ▼
-  Ollama  TurboQuant    cloud APIs (optional)
-  :11434  :8081/:8082   OpenRouter / xAI / …
-     │
-     └─ shared weights/cache often live on ai-data (fast-models + bees)
+```mermaid
+flowchart TB
+  subgraph clients["Clients"]
+    UI["Open WebUI / browser"]
+    CLI["Pi · OMP · OpenCode · Claude Code · Codex · Cursor · Grok Build"]
+  end
+
+  HR["Headroom :8787<br/>context thrift / fail-open proxy"]
+  ORCH["Manager orchestrator :8790<br/>host + role placement"]
+  LL["LiteLLM :4000<br/>OpenAI-compatible router + spend"]
+
+  subgraph workers["Worker buses (per host)"]
+    M4["desk Mac workers<br/>manager-worker-m4-*"]
+    GPU["GPU host workers<br/>manager-worker-…"]
+    NAS["NAS host workers<br/>small / vision"]
+  end
+
+  subgraph backends["Backends"]
+    OLL["Ollama"]
+    TQ["TurboQuant / llama-server"]
+    CLD["Optional cloud<br/>OpenRouter · xAI · …"]
+  end
+
+  PIO["Prompt-I/O :5050<br/>scan / metrics (fail-open)"]
+  HIP["hippo-memory<br/>per-repo agent memory"]
+  POOL["ai-data pool<br/>fast-models + bees"]
+
+  UI --> HR
+  CLI --> HR
+  HR --> ORCH
+  ORCH --> LL
+  LL --> M4 & GPU & NAS
+  M4 & GPU & NAS --> OLL & TQ
+  LL --> CLD
+  LL -.-> PIO
+  CLI -.-> HIP
+  OLL & TQ -.-> POOL
 ```
 
-### Stack in pictures (local lab captures)
+### How the pieces earn their keep
 
-Localhost screenshots of the live stack (Chrome · 2026-08-03). No LAN IPs or keys in frames.
+#### LiteLLM — routing (not a screenshot of empty admin stats)
 
-#### LiteLLM — OpenAI-compatible router
+LiteLLM is the **OpenAI-compatible bus**: aliases in, provider call out, spend logged.
+
+```mermaid
+flowchart LR
+  IN["Client request<br/>model = manager-code<br/>or manager-phi-local · …"]
+  ORCH2["Orchestrator<br/>picks host + worker alias"]
+  LL2["LiteLLM<br/>resolve worker → api_base"]
+  W["Worker runtime<br/>Ollama / TurboQuant / cloud"]
+  SP["Spend log<br/>success · tokens · $"]
+
+  IN --> ORCH2 --> LL2 --> W
+  LL2 --> SP
+```
+
+| What we measure (lab snapshot) | Value |
+|--------------------------------|------:|
+| Proxy liveliness | healthy |
+| Recent success / failure mix (spend sample) | **~85% success** (1,261 / 1,480) |
+| Tokens on successful sample rows | **~29M** total tokens accounted |
+| Global spend counter (local DB) | **~$0.14** (mostly free/local routes) |
+
+Admin UI (`:4000/ui`) is for operators after login — **not** the public hero image. Prefer the diagram above over blank model-stats screenshots.
+
+Upstream: [BerriAI/litellm](https://github.com/BerriAI/litellm) (MIT).
+
+#### Headroom — thrifty front door (context shrink before spend)
+
+Default clients hit **Headroom** first. It sits **in front of** the orchestrator / LiteLLM path and compresses bulky agent context (tool dumps, logs, RAG, history) so fewer tokens hit the model.
 
 <p align="center">
-  <img src="docs/assets/stack-local/capture-ai-gateway-litellm-swagger.png" alt="LiteLLM Swagger UI on localhost :4000" width="900" />
+  <img src="docs/assets/upstream/headroom-savings.png" alt="Headroom: compress tool outputs and context before the LLM — fewer tokens, same answers" width="820" />
 </p>
 
-<p align="center"><em><b>LiteLLM</b> Swagger / OpenAPI on <code>:4000</code> — model hub, agents, MCP, and authorize surface. Upstream: <a href="https://github.com/BerriAI/litellm">BerriAI/litellm</a> (MIT).</em></p>
+<p align="center"><em>Upstream visual from <a href="https://github.com/chopratejas/headroom">chopratejas/headroom</a> (Apache-2.0) — content-aware compressors shrink what agents send; we run that proxy as the default door at <code>:8787</code>.</em></p>
+
+**What Headroom is for in this gateway**
+
+| Claim | Source |
+|-------|--------|
+| **60–95% fewer tokens** on compressible JSON / tool dumps; **~15–20%** on typical coding-agent traffic | Upstream Headroom README / benchmarks |
+| Proof examples (upstream): code search **17.7k → 1.4k (92%)**, SRE debug **65.7k → 5.1k (92%)** | [chopratejas/headroom](https://github.com/chopratejas/headroom) proof table |
+| Accuracy preserved on standard evals (GSM8K / TruthfulQA / SQuAD / BFCL) | Same upstream docs |
+| Lab proxy load (this stack) | **~17k** API requests, **~39k** inbound HTTP, fail-open when compression has nothing to do |
+
+Local `/stats` often shows **0% compression** on short smokes (`ping`, model-list traffic) — that is expected. Savings show up on **long agent sessions** with tool/log/RAG bulk, which is why coding CLIs point at Headroom by default.
+
+```text
+agent / UI  →  Headroom (:8787)  →  orchestrator  →  LiteLLM  →  worker
+                 ↑ shrink context here
+```
+
+#### Prompt-I/O — side-channel scan, not on the critical path for failure
+
+Prompt-I/O is a **Vigil-compatible scanner** LiteLLM can call in parallel (hybrid prompt I/O). It is **fail-open**: if it is slow or down, completions still succeed.
+
+```mermaid
+flowchart TB
+  REQ["Chat completion request"]
+  LL3["LiteLLM callback / hybrid hook"]
+  PIO2["Prompt-I/O :5050"]
+  H["Heuristic + optional PII + entropy scanners"]
+  M["Prometheus metrics<br/>scan_total · hits · latency · injection flags"]
+  OUT["Allow / flag · never hard-blocks the stack by default"]
+
+  REQ --> LL3
+  LL3 -->|"async / short timeout"| PIO2
+  PIO2 --> H --> M
+  H --> OUT
+  LL3 -->|"always continues"| UP["Upstream model call"]
+```
+
+| Benefit | Why it is here |
+|---------|----------------|
+| Injection / jailbreak heuristics | Extra belt on the bus without owning consent/BAA (agents still own that) |
+| Optional PII pattern hits | Ops signal, not a HIPAA product |
+| Prometheus counters | Deck / Grafana can graph scans without scraping model bodies |
+| Fail-open timeout | Gateway stays usable when the scanner is cold |
+
+Health is intentionally boring (`status: ok`) — the value is the **scan path + metrics**, not a pretty JSON screenshot.
+
+#### hippo-memory — per-repo agent memory (not life memory)
 
 <p align="center">
-  <img src="docs/assets/stack-local/capture-ai-gateway-litellm-ui.png" alt="LiteLLM Admin UI login" width="700" />
+  <img src="docs/assets/upstream/hippo-init.svg" alt="hippo-memory mark" width="280" />
 </p>
 
-<p align="center"><em><b>LiteLLM Admin UI</b> (<code>:4000/ui</code>) — spend, keys, and model config after login. Capture is the login wall (session not stored in docs).</em></p>
+<p align="center"><em><a href="https://github.com/kitfunso/hippo-memory">kitfunso/hippo-memory</a> — agent/coding memory under <code>.hippo/</code> in each repo (MCP). Distinct from <strong>botmem</strong> (life / personal SoR).</em></p>
 
-#### Headroom — thrifty front door
+```mermaid
+flowchart LR
+  A["Coding agent session"]
+  H2["hippo MCP"]
+  E["episodic notes"]
+  S["semantic index"]
+  R["recall on next task"]
 
-<p align="center">
-  <img src="docs/assets/stack-local/capture-ai-gateway-headroom-ready.png" alt="Headroom readyz health JSON" width="700" />
-</p>
+  A -->|"remember"| H2 --> E & S
+  A -->|"recall"| H2 --> R
+```
 
-<p align="center"><em><b>Headroom</b> <code>/readyz</code> on <code>:8787</code> — health/ready JSON clients should hit before long agent sessions. Upstream: <a href="https://github.com/chopratejas/headroom">chopratejas/headroom</a>.</em></p>
+| Local store signal (example repo `.hippo/stats.json`) | Count |
+|-------------------------------------------------------|------:|
+| remembered | 1 |
+| recalled | 3 |
+| forgotten | 0 |
 
-#### Maintenance Deck — ops board (sibling monorepo)
+Stats are **per workspace**, not a shared cloud. Hippo keeps agent continuity without stuffing PHI into one global blob.
+
+#### Maintenance Deck + creative path (optional pictures)
 
 <p align="center">
   <img src="docs/assets/stack-local/capture-ai-gateway-deck.png" alt="M.A.N.A.G.E.R. Maintenance Deck systems board" width="900" />
 </p>
 
-<p align="center"><em><b>Maintenance Deck</b> (M.A.N.A.G.E.R. control plane) — systems/stack board for Headroom · LiteLLM · Grafana · Prompt-I/O · CLI versions; launch pad for coding agents pointed at this gateway. Lives in the caregiver monorepo; probes this stack.</em></p>
-
-#### Prompt-I/O — prompt metrics side service
-
-<p align="center">
-  <img src="docs/assets/stack-local/capture-ai-gateway-prompt-io.png" alt="Prompt-I/O health JSON" width="500" />
-</p>
-
-<p align="center"><em><b>Prompt-I/O</b> <code>/health</code> on <code>:5050</code> — optional prompt metrics / review path used by the Deck and tok-tua boards.</em></p>
-
-#### ComfyUI — creative path (pixels, not chat)
+<p align="center"><em><b>Maintenance Deck</b> — ops board for Headroom · LiteLLM · Grafana · Prompt-I/O · CLI versions; launch pad for agents aimed at this gateway.</em></p>
 
 <p align="center">
   <img src="docs/assets/stack-local/capture-ai-gateway-comfy-local.png" alt="ComfyUI local node graph" width="900" />
 </p>
 
-<p align="center"><em><b>ComfyUI</b> on localhost — stills/video graphs for story/creative work (e.g. <a href="https://github.com/the1truedan/mok-tua">mok-tua</a>). Not on the chat completion path; weights usually share the <a href="https://github.com/the1truedan/fast-models">fast-models</a> / ai-data pool. Upstream: <a href="https://github.com/Comfy-Org/ComfyUI">Comfy-Org/ComfyUI</a>.</em></p>
+<p align="center"><em><b>ComfyUI</b> — pixels path (story/creative, e.g. <a href="https://github.com/the1truedan/mok-tua">mok-tua</a>), not chat completions. Weights usually share the <a href="https://github.com/the1truedan/fast-models">fast-models</a> / ai-data pool.</em></p>
 
-Capture index: [`docs/assets/stack-local/AI_GATEWAY_CAPTURES.md`](./docs/assets/stack-local/AI_GATEWAY_CAPTURES.md).
+Local capture index (ops only): [`docs/assets/stack-local/AI_GATEWAY_CAPTURES.md`](./docs/assets/stack-local/AI_GATEWAY_CAPTURES.md). Upstream image credits: [`docs/assets/upstream/README.md`](./docs/assets/upstream/README.md).
 
 ### Core path
 
