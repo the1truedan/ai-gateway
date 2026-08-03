@@ -1,0 +1,48 @@
+{
+  "generated_at": "2026-08-03T01:05:25.893151+00:00",
+  "browser": "Google Chrome headless",
+  "targets": [
+    {
+      "id": "ai-gateway-litellm-swagger",
+      "url": "http://127.0.0.1:4000/",
+      "status": "ok",
+      "path": "docs/assets/stack-workflow/capture-ai-gateway-litellm-swagger.png",
+      "bytes": 97095
+    },
+    {
+      "id": "ai-gateway-litellm-ui",
+      "url": "http://127.0.0.1:4000/ui/",
+      "status": "ok",
+      "path": "docs/assets/stack-workflow/capture-ai-gateway-litellm-ui.png",
+      "bytes": 44625
+    },
+    {
+      "id": "ai-gateway-headroom-ready",
+      "url": "http://127.0.0.1:8787/readyz",
+      "status": "ok",
+      "path": "docs/assets/stack-workflow/capture-ai-gateway-headroom-ready.png",
+      "bytes": 78474
+    },
+    {
+      "id": "ai-gateway-deck",
+      "url": "http://127.0.0.1:8765/",
+      "status": "ok",
+      "path": "docs/assets/stack-workflow/capture-ai-gateway-deck.png",
+      "bytes": 359624
+    },
+    {
+      "id": "ai-gateway-prompt-io",
+      "url": "http://127.0.0.1:5050/health",
+      "status": "ok",
+      "path": "docs/assets/stack-workflow/capture-ai-gateway-prompt-io.png",
+      "bytes": 13012
+    },
+    {
+      "id": "ai-gateway-comfy-local",
+      "url": "http://127.0.0.1:8188/",
+      "status": "ok",
+      "path": "docs/assets/stack-workflow/capture-ai-gateway-comfy-local.png",
+      "bytes": 672165
+    }
+  ]
+}
