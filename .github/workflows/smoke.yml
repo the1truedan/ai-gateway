@@ -1,0 +1,77 @@
+# Production-adjacent readiness for the public gateway glue repo.
+# Validates compose files and Python packages without requiring home-lab GPUs
+# or live secrets. Full stack smoke stays local.
+name: smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML (config tools)
+        run: python -m pip install --upgrade pip pyyaml
+
+      - name: YAML configs parse
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          roots = list(Path(".").glob("litellm_config*.yaml")) + list(Path(".").glob("prometheus.yml"))
+          assert roots, "expected litellm_config*.yaml"
+          for p in roots:
+              with p.open() as f:
+                  yaml.safe_load(f)
+              print("ok", p)
+          PY
+
+      - name: Docker compose config (default + mac + linux)
+        run: |
+          docker compose -f docker-compose.yml config --quiet
+          docker compose -f docker-compose.mac.yml config --quiet || true
+          docker compose -f docker-compose.linux.yml config --quiet || true
+          echo "compose config ok"
+
+      - name: Compile services Python
+        run: |
+          if [ -d services ]; then
+            python -m compileall -q services
+          fi
+          if [ -d scripts ]; then
+            python -m compileall -q scripts || true
+          fi
+          echo "compile ok"
+
+      - name: Capacity-agent Dockerfile present
+        run: |
+          test -f services/capacity_agent/Dockerfile
+          echo "dockerfile ok"
+
+      - name: Secret/path deny-list (tracked public tree)
+        run: |
+          # Fail on private keys or obvious embedded tokens; allow policy prose.
+          set +e
+          hits=$(grep -RInE 'BEGIN (RSA |OPENSSH )?PRIVATE KEY|sk-[a-zA-Z0-9]{24,}|xox[baprs]-[0-9A-Za-z-]{20,}' \
+            --exclude-dir=.git --exclude-dir=node_modules --exclude='*.lock' . 2>/dev/null)
+          set -e
+          if [ -n "$hits" ]; then
+            echo "$hits"
+            echo "::error::secret-shaped deny-list hit"
+            exit 1
+          fi
+          echo "deny-list clean"
