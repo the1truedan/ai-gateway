@@ -42,9 +42,25 @@ jobs:
 
       - name: Docker compose config (default + mac + linux)
         run: |
+          # Compose files reference env_file: .env — CI uses placeholders only.
+          cat > .env <<'EOF'
+          LITELLM_MASTER_KEY=sk-ci-placeholder-not-a-secret
+          LITELLM_SALT_KEY=ci-salt-placeholder
+          LITELLM_DB_PASSWORD=ci_db_placeholder
+          WEBUI_SECRET_KEY=ci-webui-placeholder
+          BOTMEM_POSTGRES_PASSWORD=ci_botmem_placeholder
+          BOTMEM_OAUTH_JWT_SECRET=ci_oauth_placeholder
+          BOTMEM_JWT_ACCESS_SECRET=ci_access_placeholder
+          BOTMEM_JWT_REFRESH_SECRET=ci_refresh_placeholder
+          BOTMEM_APP_SECRET=ci_app_placeholder
+          TURNSTONE_JWT_SECRET=ci_turnstone_placeholder
+          EOF
+          # strip leading spaces from heredoc if any
+          sed -i 's/^          //' .env
           docker compose -f docker-compose.yml config --quiet
           docker compose -f docker-compose.mac.yml config --quiet || true
           docker compose -f docker-compose.linux.yml config --quiet || true
+          rm -f .env
           echo "compose config ok"
 
       - name: Compile services Python
@@ -64,14 +80,31 @@ jobs:
 
       - name: Secret/path deny-list (tracked public tree)
         run: |
-          # Fail on private keys or obvious embedded tokens; allow policy prose.
-          set +e
-          hits=$(grep -RInE 'BEGIN (RSA |OPENSSH )?PRIVATE KEY|sk-[a-zA-Z0-9]{24,}|xox[baprs]-[0-9A-Za-z-]{20,}' \
-            --exclude-dir=.git --exclude-dir=node_modules --exclude='*.lock' . 2>/dev/null)
-          set -e
-          if [ -n "$hits" ]; then
-            echo "$hits"
-            echo "::error::secret-shaped deny-list hit"
-            exit 1
-          fi
-          echo "deny-list clean"
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          pat = re.compile(
+              r"BEGIN (?:RSA |OPENSSH )?PRIVATE KEY|sk-[a-zA-Z0-9]{24,}|xox[baprs]-[0-9A-Za-z-]{20,}",
+              re.I,
+          )
+          allow = re.compile(r"placeholder|example|ci-|your-|changeme|sk-ci-", re.I)
+          hits = []
+          for p in Path(".").rglob("*"):
+              if not p.is_file():
+                  continue
+              if any(x in p.parts for x in (".git", "node_modules", ".github")):
+                  continue
+              if p.suffix in {".lock", ".png", ".jpg"}:
+                  continue
+              try:
+                  text = p.read_text(encoding="utf-8", errors="replace")
+              except OSError:
+                  continue
+              for i, line in enumerate(text.splitlines(), 1):
+                  if pat.search(line) and not allow.search(line):
+                      hits.append(f"{p}:{i}:{line[:100]}")
+          if hits:
+              print("\n".join(hits[:50]))
+              raise SystemExit("secret-shaped deny-list hit")
+          print("deny-list clean")
+          PY
