@@ -1,6 +1,6 @@
 # OpenRouter free models (via AI-Gateway)
 
-_Auto-generated 2026-07-17T01:37:29.925164+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
+_Auto-generated 2026-08-10T22:31:27.992477+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
 
 Source: [openrouter.ai/models?max_price=0](https://openrouter.ai/models?max_price=0)
 
@@ -21,30 +21,24 @@ so Prometheus, retries, and fallbacks apply.
 
 ## Catalog
 
-**20** free chat-candidate models → **24** LiteLLM aliases (includes curated names).
+**14** free chat-candidate models → **16** LiteLLM aliases (includes curated names).
 
 | OpenRouter id | LiteLLM alias(es) | Ctx | Modality | Role |
 |---------------|-------------------|-----|----------|------|
-| `qwen/qwen3-coder:free` | `manager-big-context`, `manager-understand-audit`, `or-free-qwen-qwen3-coder-free` | 1.0M | text->text | Best free coding + huge context audits |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | `or-free-nvidia-nemotron-3-ultra-550b-a55b-free` | 1M | text->text | Frontier reasoning / orchestration |
-| `nvidia/nemotron-3-super-120b-a12b:free` | `or-free-nvidia-nemotron-3-super-120b-a12b-free` | 1M | text->text | Strong general MoE, efficient active params |
-| `tencent/hy3:free` | `or-free-tencent-hy3-free` | 262k | text->text | Large MoE reasoning (Tencent) |
+| `inclusionai/ling-3.0-tiny:free` | `or-free-inclusionai-ling-3-0-tiny-free` | 262k | text->text | General free chat |
+| `poolside/laguna-s-2.1:free` | `or-free-poolside-laguna-s-2-1-free` | 262k | text->text | General free chat |
 | `poolside/laguna-xs-2.1:free` | `manager-audit-claude`, `or-free-poolside-laguna-xs-2-1-free` | 262k | text->text | Lighter coding agent (curated audit) |
-| `poolside/laguna-m.1:free` | `or-free-poolside-laguna-m-1-free` | 262k | text->text | Flagship free coding agent |
 | `google/gemma-4-26b-a4b-it:free` | `or-free-google-gemma-4-26b-a4b-it-free` | 262k | text+image+video->text | Free multimodal MoE VLM |
 | `google/gemma-4-31b-it:free` | `or-free-google-gemma-4-31b-it-free` | 262k | text+image+video->text | Free multimodal VLM (image/video→text) |
-| `qwen/qwen3-next-80b-a3b-instruct:free` | `or-free-qwen-qwen3-next-80b-a3b-instruct-free` | 262k | text->text | Fast instruct chat |
+| `nvidia/nemotron-3-super-120b-a12b:free` | `or-free-nvidia-nemotron-3-super-120b-a12b-free` | 262k | text->text | Strong general MoE, efficient active params |
 | `cohere/north-mini-code:free` | `or-free-cohere-north-mini-code-free` | 256k | text->text | Agentic coding (North family) |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | `or-free-nvidia-nemotron-3-nano-omni-30b-a3b-reasoning-free` | 256k | text+image+audio+video->text | Multimodal perception / sub-agent |
 | `nvidia/nemotron-3-nano-30b-a3b:free` | `or-free-nvidia-nemotron-3-nano-30b-a3b-free` | 256k | text->text | Efficient small MoE for agents |
 | `openrouter/free` | `manager-openrouter-free`, `or-free-openrouter-free` | 200k | text+image->text | Router: random free model (unpredictable) |
 | `openai/gpt-oss-20b:free` | `or-free-openai-gpt-oss-20b-free` | 131k | text->text | Small OSS baseline |
-| `meta-llama/llama-3.3-70b-instruct:free` | `or-free-meta-llama-llama-3-3-70b-instruct-free` | 131k | text->text | General chat 70B |
-| `meta-llama/llama-3.2-3b-instruct:free` | `or-free-meta-llama-llama-3-2-3b-instruct-free` | 131k | text->text | Tiny general chat |
-| `nousresearch/hermes-3-llama-3.1-405b:free` | `or-free-nousresearch-hermes-3-llama-3-1-405b-free` | 131k | text->text | Large generalist / agentic |
 | `nvidia/nemotron-nano-12b-v2-vl:free` | `or-free-nvidia-nemotron-nano-12b-v2-vl-free` | 128k | text+image+video->text | Video/image VL reasoning |
 | `nvidia/nemotron-nano-9b-v2:free` | `or-free-nvidia-nemotron-nano-9b-v2-free` | 128k | text->text | Tiny efficient LLM |
-| `cognitivecomputations/dolphin-mistral-24b-venice-edition:free` | `or-free-cognitivecomputations-dolphin-mistral-24b-venice-edition-free` | 32k | text->text | Uncensored; avoid PHI |
 
 ## Compare & contrast (use cases)
 
