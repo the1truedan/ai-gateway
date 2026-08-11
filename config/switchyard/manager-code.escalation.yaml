@@ -1,0 +1,18 @@
+routes:
+  manager-code:
+    type: escalation_router
+    weak:
+      id: weak
+      model: qwen3.5:9b
+      base_url: http://192.168.1.5:11434/v1
+      api_key: ollama
+    strong:
+      id: strong
+      model: qwen2.5-coder:14b
+      base_url: http://192.168.1.5:11434/v1
+      api_key: ollama
+    judge:
+      model: qwen2.5-coder:14b
+      base_url: http://192.168.1.5:11434/v1
+      api_key: ollama
+    fallback_target_on_evict: weak

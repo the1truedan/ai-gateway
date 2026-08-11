@@ -1,6 +1,6 @@
 # ai-gateway
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](CHANGELOG.md)
 
 One front door for the models and tools in a home AI lab — chat UIs, coding
 agents, and scripts aim at the same local gateway instead of five different
@@ -9,12 +9,11 @@ API bases and five different failure modes.
 This repo is **glue and ops**, not a from-scratch model runtime. The value is
 wiring known open-source pieces so they behave as one stack.
 
-**Current release:** [`v0.1.0`](CHANGELOG.md) — PMB context-conservation docs,
-explicit multi-CLI hippo handoff, Prompt-I/O gap note, model-pool custody
-stack (Johnny Appleseed/CHIPPER/CHAINS/FluxDown/rsync). See
-[CHANGELOG.md](CHANGELOG.md) for dated detail.
+**Current release:** [`v0.2.0`](CHANGELOG.md) — NeMo Switchyard staged +
+smoke-tested, ccusage adopted, saturation-router bug fix (was non-functional).
+See [CHANGELOG.md](CHANGELOG.md) for dated detail.
 
-## Stack map (what is actually in play — as of v0.1.0)
+## Stack map (what is actually in play — as of v0.2.0)
 
 Clients and agents talk to **Headroom** (`:8787`) for a thrifty path, which
 forwards to **LiteLLM** (`:4000`). LiteLLM fans out to local runtimes

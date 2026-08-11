@@ -7,6 +7,37 @@ Commits before this file existed predate versioning and aren't individually
 back-filled here — `git log` is authoritative for that history. This starts
 the tracked record going forward.
 
+## [0.2.0] — 2026-08-11
+
+### Added
+
+- **NeMo Switchyard staged and smoke-tested**: `config/switchyard/manager-code.escalation.yaml`
+  (fully local escalation-router config, zero cloud keys) + `docs/SWITCHYARD_STAGING_2026-08-11.md`
+  documenting the real packaging gaps found (`nemo-switchyard[cli]` per the
+  upstream README is missing `pyyaml`/`uvicorn`/`fastapi` — `[cli,server]` is
+  the actual working install) and a verified end-to-end smoke test (real
+  chat completion, correctly routed to the weak tier). Not wired into
+  production routing — a deliberate follow-up decision, not done here.
+- `ccusage` (MIT, upstream) installed globally for local CLI-agent token/cost
+  tracking across Claude Code, Codex, OpenCode, Grok Build, and others — reads
+  existing on-disk logs only, no upload.
+
+### Fixed
+
+- `tok_tua/saturation_router.py` / `scripts/saturation_monitor.py`: both were
+  non-functional as committed in 0.1.0. `get_saturation_status()` called
+  `prometheus_client` internals that don't exist in the real API and always
+  silently fell through to a hardcoded "never saturated" result;
+  `check_saturation()` had a `dict + dict` line that would raise `TypeError`
+  the moment it actually triggered; the monitor queried `localhost` instead
+  of the Tower host where Prometheus runs, against a metric name and a
+  `host=` label that were never real. Rewritten against
+  `headroom_latency_ms_sum`/`_count` (confirmed live via direct Prometheus
+  query — Headroom is the single front door for all traffic, so there's no
+  per-host label to filter on, which is also why the original design's
+  premise didn't hold). Both scripts now run clean and were verified against
+  real generated traffic (7.84ms measured, not a stub value).
+
 ## [0.1.0] — 2026-08-11
 
 First versioned release.
