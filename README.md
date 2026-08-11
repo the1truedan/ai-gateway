@@ -39,7 +39,8 @@ flowchart TB
 
   PIO["Prompt-I/O :5050<br/>scan / metrics (fail-open)"]
   HIP["hippo-memory<br/>per-repo agent memory"]
-  POOL["ai-data pool<br/>fast-models + bees"]
+  PMB["PMB<br/>per-project semantic memory"]
+  POOL["ai-data pool<br/>fast-models + bees + Johnny/CHIPPER catalog"]
 
   UI --> HR
   CLI --> HR
@@ -50,6 +51,7 @@ flowchart TB
   LL --> CLD
   LL -.-> PIO
   CLI -.-> HIP
+  CLI -.-> PMB
   OLL & TQ -.-> POOL
 ```
 
@@ -137,6 +139,8 @@ flowchart TB
 
 Health is intentionally boring (`status: ok`) — the value is the **scan path + metrics**, not a pretty JSON screenshot.
 
+**Honest gap, not a claim of completeness:** Prompt-I/O today is pure telemetry. It scores and counts, but nothing downstream *acts* on a flagged scan — the orchestrator doesn't route a PII-flagged prompt away from a cloud alias, and a high-confidence injection hit doesn't block the completion or force a re-route to a local-only model. It's a belt, not a gate, right now. Closing that loop (scan result → routing decision) is real future work, not implemented.
+
 #### hippo-memory — per-repo agent memory (not life memory)
 
 <p align="center">
@@ -147,15 +151,22 @@ Health is intentionally boring (`status: ok`) — the value is the **scan path +
 
 ```mermaid
 flowchart LR
-  A["Coding agent session"]
-  H2["hippo MCP"]
+  subgraph agents["Any CLI pointed at this repo"]
+    CC["Claude Code"]
+    CX["Codex"]
+    GB["Grok Build"]
+    CU["Cursor"]
+  end
+  H2["hippo MCP<br/>(same .hippo/ store)"]
   E["episodic notes"]
   S["semantic index"]
   R["recall on next task"]
 
-  A -->|"remember"| H2 --> E & S
-  A -->|"recall"| H2 --> R
+  CC & CX & GB & CU -->|"remember"| H2 --> E & S
+  CC & CX & GB & CU -->|"recall"| H2 --> R
 ```
+
+Because every agent above reads/writes the **same per-repo `.hippo/` store**, switching tools mid-project is a handoff, not a reset — Codex picking up a task Claude Code started sees what Claude Code already recalled/remembered, and vice versa. That handoff is implicit in the store being shared, not a bespoke integration between the agents themselves.
 
 | Local store signal (example repo `.hippo/stats.json`) | Count |
 |-------------------------------------------------------|------:|
@@ -164,6 +175,27 @@ flowchart LR
 | forgotten | 0 |
 
 Stats are **per workspace**, not a shared cloud. Hippo keeps agent continuity without stuffing PHI into one global blob.
+
+#### PMB — per-project semantic memory (context conservation via indexing)
+
+Where hippo-memory captures explicit remember/recall calls, [PMB](https://github.com/pmb-ai/pmb) indexes a project's own code and docs directly — code-symbol extraction, prose ingestion, and local-embedding semantic search, so an agent can recall *relevant prior context* without the human (or a previous agent session) having to re-paste it.
+
+```mermaid
+flowchart LR
+  P["Project (code + docs)"]
+  IDX["pmb index / pmb watch<br/>symbols + prose, free"]
+  EMB["Local embedder (bge-m3)<br/>via Ollama on a GPU-capable host — never cloud"]
+  VEC["Per-project vector + BM25 index"]
+  AG["Any agent session"]
+
+  P --> IDX --> VEC
+  VEC --> EMB
+  AG -->|"recall(query)"| VEC --> AG
+```
+
+**Why this is the context-conservation piece:** instead of an agent re-reading a whole codebase (or a human re-explaining project history) at the start of every session, `pmb recall` returns just the relevant slice — same spirit as Headroom shrinking tool-output tokens, applied to *prior project context* instead of the current request. Embedding runs against a local Ollama model, never a cloud embedding API, so this works the same way for a workspace that will eventually touch sensitive content as for one that never will.
+
+**One isolation rule that matters:** PMB resolves which project's memory an agent is using via (in priority order) an explicit env var, a project-local `.pmb/workspace.yaml` pin, a saved global default, then git/cwd auto-detection — and the saved global default silently outranks cwd-based detection everywhere it isn't overridden. Pin every project explicitly (`.pmb/workspace.yaml`, git-ignored — it's local machine state, not portable across clones) rather than relying on the global default alone, or a second project's agent session can silently read/write the first project's memory. Full notes: [`docs/PMB_AGENT_MEMORY_AND_MODEL_STAGING.md`](./docs/PMB_AGENT_MEMORY_AND_MODEL_STAGING.md).
 
 #### Maintenance Deck + creative path (optional pictures)
 
@@ -214,6 +246,8 @@ Lab launchers that sit *beside* those CLIs:
 | **[Hister](https://github.com/asciimoo/hister)** | Local search (`:4433`); profile `search` | [asciimoo/hister](https://github.com/asciimoo/hister) · image `ghcr.io/asciimoo/hister` |
 | **[botmem](https://github.com/botmem/botmem)** | Personal / life memory SoR (compose profile `memory`) | [botmem/botmem](https://github.com/botmem/botmem) · images `ghcr.io/botmem/botmem` |
 | **[hippo-memory](https://github.com/kitfunso/hippo-memory)** | Agent/coding memory under `.hippo/` per repo (host MCP, not the same as botmem) | [kitfunso/hippo-memory](https://github.com/kitfunso/hippo-memory) · npm `hippo-memory` |
+| **[PMB](https://github.com/pmb-ai/pmb)** | Per-project semantic memory: code/doc indexing + local embedding + recall | [pmb-ai/pmb](https://github.com/pmb-ai/pmb) |
+| **AgentsView** | Session-history viewer across CLI agents (Claude Code, Codex, Grok, OpenCode, …) — index only, no bulk transcript dumping | This org (internal) |
 | **[Turnstone](https://github.com/turnstonelabs/turnstone)** | Optional agent/orchestration client path through Headroom | [turnstonelabs/turnstone](https://github.com/turnstonelabs/turnstone) |
 | **AIDA / vision-embed / prompt-io** | Lab services in `services/` (document helpers, embeddings, metrics) | This repo (sanitized) |
 | **llmtrace-proxy** | Optional request tracing | `ghcr.io/techlab-innov/llmtrace-proxy` |
@@ -225,7 +259,10 @@ botmem ≠ hippo: life memory vs agent/project memory. See `config/clients/memor
 | Piece | Role | Upstream |
 |-------|------|----------|
 | **[fast-models](https://github.com/the1truedan/fast-models)** | Unraid Docker stack: dual NVMe → Btrfs pool → NFS **ai-data** | This org |
-| **[bees](https://github.com/Zygo/bees)** | Best-Effort Extent-Same — Btrfs online dedupe agent | [Zygo/bees](https://github.com/Zygo/bees) |
+| **[bees](https://github.com/Zygo/bees)** | Best-Effort Extent-Same — Btrfs online dedupe agent (block/extent level, whole-pool) | [Zygo/bees](https://github.com/Zygo/bees) |
+| **FluxDown** | Self-hosted download queue for staging model weights (HTTP / Hugging Face / Civitai) before they land in the shared pool | This org (internal) |
+| **rsync promote step** | Staged downloads move into the pool via plain `rsync` (no `--delete`) — additive only, originals kept until a soak period passes | Standard `rsync` |
+| **Johnny Appleseed + C.H.I.P.P.E.R. + C.H.A.I.N.S.** | Catalog + dedup-job scheduling + custody/audit receipts for the model/tool pool: Johnny indexes content digests, CHIPPER schedules the hash/index/stage passes, CHAINS records what got promoted or quarantined and why. Sits above bees (which stays the physical L3 layer underneath) — a content-hash ladder (size → sample → full SHA256), not a replacement for it | This org (internal design) |
 | **Prometheus + Grafana** | Metrics / bees occupancy dashboards | [prometheus](https://prometheus.io/) · [grafana](https://grafana.com/) |
 
 Ops notes we published from real incidents: [`docs/ops/bees/`](./docs/ops/bees/).
