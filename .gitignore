@@ -32,3 +32,4 @@ __pycache__/
 .mcp.json
 *.bak
 *.bak-*
+.pmb/

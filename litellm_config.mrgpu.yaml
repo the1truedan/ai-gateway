@@ -1,0 +1,115 @@
+# MRGPU / gpu-host worker bus — orchestration placement targets only.
+# Headroom/orchestrator map manager-code → manager-worker-gpu-host-code
+# (tok-tua also accepts manager-worker-mrgpu-* as aliases).
+#
+# CODING PIN LAW (16GB class, e.g. RTX 4060 Ti):
+#   - manager-worker-*-code → qwen3.5:9b ONLY
+#   - NEVER map coding workers to qwen3.5:27b / qwen3-coder:30b
+#   - Spikes (Gemma-26B, Bonsai, …) live in litellm_config.spike-mrgpu.yaml
+#     and must be requested by explicit model name — never default_fallbacks
+#
+# think: false is required for qwen3.5 (thinking tokens burn completion budget).
+
+model_list:
+  - model_name: manager-worker-gpu-host-code
+    litellm_params: &mrgpu_code
+      model: ollama_chat/qwen3.5:9b
+      api_base: os.environ/OLLAMA_API_BASE
+      think: false
+      num_ctx: 32768
+      temperature: 0.2
+      top_p: 0.8
+      presence_penalty: 0
+
+  # tok-tua / herdr preferred alias (same backend as gpu-host-code)
+  - model_name: manager-worker-mrgpu-code
+    litellm_params: *mrgpu_code
+
+  - model_name: manager-worker-gpu-host-research
+    litellm_params: &mrgpu_reason
+      model: ollama_chat/gemma4:12b
+      api_base: os.environ/OLLAMA_API_BASE
+      think: false
+      num_ctx: 32768
+      temperature: 0.2
+      top_p: 0.8
+
+  - model_name: manager-worker-mrgpu-research
+    litellm_params: *mrgpu_reason
+
+  - model_name: manager-worker-gpu-host-reason
+    litellm_params: *mrgpu_reason
+
+  - model_name: manager-worker-mrgpu-reason
+    litellm_params: *mrgpu_reason
+
+  - model_name: manager-worker-gpu-host-review
+    litellm_params: *mrgpu_reason
+
+  - model_name: manager-worker-mrgpu-review
+    litellm_params: *mrgpu_reason
+
+  - model_name: manager-worker-gpu-host-vision
+    litellm_params: &mrgpu_vision
+      model: ollama_chat/qwen3-vl:8b
+      api_base: os.environ/OLLAMA_API_BASE
+      think: false
+
+  - model_name: manager-worker-mrgpu-vision
+    litellm_params: *mrgpu_vision
+
+  - model_name: manager-worker-gpu-host-phi
+    litellm_params: *mrgpu_code
+
+  - model_name: manager-worker-mrgpu-phi
+    litellm_params: *mrgpu_code
+
+  # Optional stronger coder A/B when VRAM free — still ≤14B class, not 27/30B
+  - model_name: manager-worker-gpu-host-code-14b
+    litellm_params:
+      model: ollama_chat/qwen2.5-coder:14b-instruct-q5_K_M
+      api_base: os.environ/OLLAMA_API_BASE
+      think: false
+      num_ctx: 16384
+      temperature: 0.2
+      top_p: 0.8
+
+litellm_settings:
+  drop_params: true
+  request_timeout: 600
+  num_retries: 1
+  allowed_fails: 1
+  cooldown_time: 30
+  telemetry: false
+  store_prompts_in_spend_logs: false
+  maximum_spend_logs_retention_period: "90d"
+  # Coding never inherits a global large-model fallback
+  default_fallbacks: []
+
+router_settings:
+  # simple-shuffle only among identical deployments of the same model_name.
+  # Coding workers have a single deployment each → no silent large-model RR.
+  routing_strategy: simple-shuffle
+  num_retries: 1
+  timeout: 600
+  allowed_fails: 1
+  cooldown_time: 30
+  fallbacks:
+    # Coding pin: empty chain — fail closed rather than spill to 27B/30B
+    - manager-worker-gpu-host-code: []
+    - manager-worker-mrgpu-code: []
+    - manager-worker-gpu-host-code-14b: [manager-worker-gpu-host-code]
+    - manager-worker-gpu-host-reason: [manager-worker-gpu-host-code]
+    - manager-worker-mrgpu-reason: [manager-worker-mrgpu-code]
+    - manager-worker-gpu-host-research: [manager-worker-gpu-host-reason]
+    - manager-worker-mrgpu-research: [manager-worker-mrgpu-reason]
+    - manager-worker-gpu-host-review: [manager-worker-gpu-host-reason]
+    - manager-worker-mrgpu-review: [manager-worker-mrgpu-reason]
+    - manager-worker-gpu-host-vision: []
+    - manager-worker-mrgpu-vision: []
+    - manager-worker-gpu-host-phi: []
+    - manager-worker-mrgpu-phi: []
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL

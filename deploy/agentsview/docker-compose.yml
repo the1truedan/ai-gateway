@@ -1,0 +1,83 @@
+name: manager-orchestration
+
+# Standalone AgentsView stack — session-index archive + 24/7 browse UI.
+# Deliberately its own compose file/project (matching the nas-host-orchestration /
+# tower-orchestration pattern): shares the `manager-orchestration` network/project
+# name with the other manager-orchestration stacks so it's reachable the same way,
+# but does not edit or depend on either of those other compose files. Fully
+# independent lifecycle: `docker compose -p manager-orchestration -f deploy/agentsview/docker-compose.yml up -d`
+# and `... down` touch only these two services.
+#
+# m4rv (desk) and mrgpu (gpu-host) are the writable sync edges — they run
+# `agentsview pg push --watch` against agentsview-db below. This stack never
+# scans local CLI session directories itself (`--no-sync` in the Dockerfile).
+# See docs/operations/AGENTSVIEW_TOWER_POSTGRES_MIGRATION_2026-08-06.md.
+
+services:
+  agentsview-db:
+    image: postgres:16
+    container_name: tower-agentsview-db
+    restart: unless-stopped
+    env_file: ${AGENTSVIEW_ENV_FILE:-.env}
+    environment:
+      POSTGRES_DB: agentsview
+      POSTGRES_USER: agentsview
+      POSTGRES_PASSWORD: ${AGENTSVIEW_DB_PASSWORD}
+    ports:
+      # Published (unlike litellm-db) — m4rv and mrgpu are separate physical
+      # hosts, not containers on this bridge network, and need direct LAN
+      # reach for `agentsview pg push`. 5433 avoids the plain-5432 habit other
+      # Tower services avoid publishing. Password-auth only; LAN/VPN only —
+      # never port-forward this to the internet.
+      - "5433:5432"
+    volumes:
+      - /mnt/user/appdata/manager-orchestration/agentsview-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d agentsview -U agentsview"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks: [manager-orchestration]
+    labels:
+      manager.stack: orchestration
+      manager.role: agentsview-postgres
+
+  agentsview:
+    build:
+      context: ../../services/agentsview
+    image: manager-agentsview:local
+    container_name: tower-agentsview
+    restart: unless-stopped
+    env_file: ${AGENTSVIEW_ENV_FILE:-.env}
+    environment:
+      AGENTSVIEW_PG_URL: postgresql://agentsview:${AGENTSVIEW_DB_PASSWORD}@agentsview-db:5432/agentsview
+      AGENTSVIEW_PG_SCHEMA: agentsview
+      AGENTSVIEW_DATA_DIR: /data
+    volumes:
+      - /mnt/user/appdata/manager-orchestration/agentsview-data:/data
+    ports:
+      # Fixed host port — unlike the desk Pinokio instance, this one does not drift.
+      - "42100:42100"
+    depends_on:
+      agentsview-db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:42100/')\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [manager-orchestration]
+    labels:
+      manager.stack: orchestration
+      manager.role: session-index
+
+networks:
+  manager-orchestration:
+    name: manager-orchestration
+    driver: bridge

@@ -589,6 +589,8 @@ is deprecated, so revisit it when Headroom supports the Responses API end to end
 | Local only coding | `manager-fast-local` | Ollama `qwen3.5:9b` |
 | Reasoning / orchestrator | `tier-local-reason` / `manager-reasoning-turbo` | TurboQuant `:8081` (Gemma4 12B) |
 | Local reasoning | `manager-reasoning-local` | Ollama `gemma4:12b` |
+| mrgpu deepseek reasoning (thinking model) | `manager-worker-mrgpu-deepseek-reason` | Ollama `deepseek-r1:14b`, mrgpu (2026-08-10) |
+| mrgpu load-testing (opt-in, never a fallback target) | `manager-test-gpt-oss-20b` / `manager-test-qwen3-5-27b` / `manager-test-qwen3-coder-30b` / `manager-test-embed-bge-m3` / `manager-test-law-model` | Ollama, mrgpu — pulled-but-unproven models, added 2026-08-10; see `CLI_AGENT_STATUS_CONSOLIDATED_2026-08-10.md` |
 | MLX fast (opt-in) | `tier-local-mlx` / `manager-mlx-fast` | LM Studio `:1234` `google/gemma-3n-e4b` |
 | LMS general (opt-in) | `manager-lms-local` | LM Studio `:1234` `qwen/qwen3.5-9b` |
 | LMS vision small (opt-in) | `manager-lms-vision` | LM Studio `:1234` `google/gemma-4-e4b` |

@@ -298,8 +298,18 @@ def _capacities(test_override: str) -> dict[str, dict[str, Any]]:
 
 
 def _local_host(
-    text: str, values: dict[str, dict[str, Any]], *, allow_nas_host: bool = False
+    text: str,
+    values: dict[str, dict[str, Any]],
+    *,
+    allow_nas_host: bool = False,
+    prefer_coding_gpu: bool = False,
 ) -> str | None:
+    """Pick a local host. Coding/execute prefers gpu-host first (no score shuffle).
+
+    Score-based ordering used to silently place coding on mac-client when GPU
+    score dipped, which could load oversized Ollama tags or thrash placement.
+    Coding pin law: manager-code → gpu-host worker (qwen3.5:9b), not 27B/30B.
+    """
     order = ["gpu-host", "mac-client"]
     if allow_nas_host and _matches(VISION_PATTERNS, text):
         order = ["nas-host", "gpu-host", "mac-client"]
@@ -307,7 +317,8 @@ def _local_host(
         order = ["nas-host", "gpu-host", "mac-client"]
     elif _matches(APPLE_PATTERNS, text):
         order = ["mac-client", "gpu-host"]
-    elif _matches(NVIDIA_PATTERNS, text):
+    elif prefer_coding_gpu or _matches(NVIDIA_PATTERNS, text) or _matches(EXECUTE_PATTERNS, text):
+        # Coding / CUDA / execute: pin gpu-host first; never capacity-shuffle away.
         order = ["gpu-host", "mac-client"]
     else:
         order = sorted(order, key=lambda host: float(values.get(host, {}).get("score", 1.0)))
@@ -360,13 +371,34 @@ def decide(payload: dict[str, Any], headers: Any) -> Decision:
                 tier="free-cloud",
                 reason="explicit free-cloud alias selected",
             )
-        host = _local_host(text, values, allow_nas_host=requested == "manager-vision")
+        coding = requested in {"manager-code", "manager-plan", "manager-review"}
+        host = _local_host(
+            text,
+            values,
+            allow_nas_host=requested == "manager-vision",
+            prefer_coding_gpu=coding or requested == "manager-phi-local",
+        )
         if host is None:
             raise RuntimeError("cloud_consent_required")
-        return Decision(host, requested, "local", "explicit local manager alias selected", cloud_allowed=False)
+        return Decision(
+            host,
+            requested,
+            "local",
+            (
+                "explicit local manager alias selected"
+                + ("; coding pin prefers gpu-host" if coding else "")
+            ),
+            cloud_allowed=False,
+        )
 
     role = _role(text)
-    host = _local_host(text, values, allow_nas_host=True)
+    coding_role = role in {"code", "execute"} or _matches(EXECUTE_PATTERNS, text)
+    host = _local_host(
+        text,
+        values,
+        allow_nas_host=True,
+        prefer_coding_gpu=coding_role or role in {"review", "plan"},
+    )
     if host is None:
         raise RuntimeError("cloud_consent_required")
     if host == "nas-host" and _matches(VISION_PATTERNS, text):
@@ -379,7 +411,10 @@ def decide(payload: dict[str, Any], headers: Any) -> Decision:
         selected_host=host,
         selected_model=selected_model,
         tier="local",
-        reason=f"classified as {role}; selected available local host",
+        reason=(
+            f"classified as {role}; selected available local host"
+            + ("; coding pin prefers gpu-host" if coding_role else "")
+        ),
         cloud_allowed=False,
     )
 

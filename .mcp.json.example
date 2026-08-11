@@ -2,13 +2,22 @@
   "mcpServers": {
     "jcodemunch": {
       "command": "uvx",
-      "args": ["jcodemunch-mcp"],
+      "args": [
+        "jcodemunch-mcp"
+      ],
       "lifecycle": "lazy",
       "requestTimeoutMs": 120000
     },
     "hister": {
       "url": "http://<gpu-host-ip>:4433/mcp",
       "lifecycle": "lazy"
+    },
+    "pmb": {
+      "type": "http",
+      "url": "http://127.0.0.1:8765/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-pmb-token>"
+      }
     }
   }
 }

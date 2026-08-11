@@ -168,15 +168,47 @@ model_list:
       api_key: os.environ/XAI_API_KEY
 
   # Explicit paid aliases. Selecting one is the approval signal.
+  # Prefer OPENAI_CLOUD_API_KEY so client OPENAI_API_KEY can stay = LITELLM_MASTER_KEY.
   - model_name: manager-codex-cloud
     litellm_params:
       model: openai/gpt-5.6-terra
-      api_key: os.environ/OPENAI_API_KEY
+      api_key: os.environ/OPENAI_CLOUD_API_KEY
+
+  - model_name: manager-codex-paid
+    litellm_params:
+      model: openai/gpt-5.6-terra
+      api_key: os.environ/OPENAI_CLOUD_API_KEY
 
   - model_name: tier-codex-cloud
     litellm_params:
       model: openai/gpt-5.6-terra
-      api_key: os.environ/OPENAI_API_KEY
+      api_key: os.environ/OPENAI_CLOUD_API_KEY
+
+  - model_name: manager-openai-paid
+    litellm_params:
+      model: openai/gpt-5.6-terra
+      api_key: os.environ/OPENAI_CLOUD_API_KEY
+
+  - model_name: manager-openai-mini-paid
+    litellm_params:
+      model: openai/gpt-5.6-terra
+      api_key: os.environ/OPENAI_CLOUD_API_KEY
+
+  # Real Anthropic via LiteLLM (not local claude-* aliases which map to Ollama).
+  - model_name: manager-claude-paid
+    litellm_params:
+      model: anthropic/claude-sonnet-4-6
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: manager-claude-opus-paid
+    litellm_params:
+      model: anthropic/claude-opus-4-7
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: manager-claude-haiku-paid
+    litellm_params:
+      model: anthropic/claude-haiku-4-5-20251001
+      api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: manager-mimo-cloud
     litellm_params:
@@ -323,9 +355,15 @@ model_list:
   # Full catalog refreshed every 24h via scripts/sync_openrouter_free_models.py
   # Source filter: https://openrouter.ai/models?max_price=0
   # ==========================================
+  # High-context free (refresh via scripts/sync_openrouter_free_models.py).
   - model_name: manager-big-context
     litellm_params:
-      model: openrouter/qwen/qwen3-coder:free
+      model: openrouter/nvidia/nemotron-3-ultra-550b-a55b:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: manager-openrouter-hc
+    litellm_params:
+      model: openrouter/nvidia/nemotron-3-ultra-550b-a55b:free
       api_key: os.environ/OPENROUTER_API_KEY
 
   - model_name: manager-audit-claude
@@ -335,10 +373,16 @@ model_list:
 
   - model_name: manager-understand-audit
     litellm_params:
-      model: openrouter/qwen/qwen3-coder:free
+      model: openrouter/poolside/laguna-s-2.1:free
       api_key: os.environ/OPENROUTER_API_KEY
 
   - model_name: manager-openrouter-free
+    litellm_params:
+      model: openrouter/openrouter/free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  # Explicit paid OpenRouter (pin id in OPENROUTER_PAID_MODEL when set; default safe free).
+  - model_name: manager-openrouter-paid
     litellm_params:
       model: openrouter/openrouter/free
       api_key: os.environ/OPENROUTER_API_KEY
@@ -528,9 +572,18 @@ router_settings:
     - manager-understand-audit: [manager-big-context, manager-audit-claude, manager-openrouter-free]
     - manager-audit-claude: [manager-openrouter-free, manager-grok-coding]
     - manager-codex-cloud: [manager-openrouter-free]
+    - manager-codex-paid: []
+    - manager-openai-paid: []
+    - manager-openai-mini-paid: []
+    - manager-claude-paid: []
+    - manager-claude-opus-paid: []
+    - manager-claude-haiku-paid: []
+    - manager-openrouter-hc: [manager-openrouter-free]
+    - manager-openrouter-paid: [manager-openrouter-free]
     - tier-codex-cloud: [manager-codex-cloud, manager-openrouter-free]
     - manager-mimo-cloud: [manager-openrouter-free]
     - tier-mimo-cloud: [manager-mimo-cloud, manager-openrouter-free]
+    # Local Claude-name aliases (Ollama) — not Anthropic billing.
     - claude-sonnet-4-6: [manager-gemini-fast, manager-openrouter-free, manager-grok-coding]
     - claude-opus-4-7: [manager-gemini-agent, manager-openrouter-free, manager-grok-coding]
     - claude-haiku-4-5-20251001: [manager-gemini-fast, manager-openrouter-free]

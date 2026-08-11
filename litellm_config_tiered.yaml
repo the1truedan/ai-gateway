@@ -1,0 +1,106 @@
+# ============================================
+# Tiered LLM Routing Config - MRGPU Primary Strategy
+# Priority 1: Local Ollama/TurboQuant (M4RV) 
+# Priority 2: Network hosts if configured separately
+# Priority 3: Cloud fallbacks only when local saturated
+# ============================================
+
+model_list:
+  # === PRIORITY 1: LOCAL MODELS (Ollama on M4RV - avoid thermal throttling) ===
+  - model_name: manager-auto-local-first
+    litellm_params:
+      model: ollama_chat/qwen3.5:9b
+      api_base: http://host.docker.internal:11434
+      metadata: {priority: "high", host: "local-ollama"}
+
+  - model_name: manager-reasoning-local-first  
+    litellm_params:
+      model: ollama_chat/gemma4:12b
+      api_base: http://host.docker.internal:11434
+      metadata: {priority: "high", host: "local-ollama"}
+
+  - model_name: manager-fast-turbo-local-first
+    litellm_params:
+      model: openai/qwen-coder  
+      api_base: http://headroom.local:8082/v1
+      metadata: {priority: "high", host: "turboquant"}
+
+  # === PRIORITY 2: NETWORK HOSTS (if MRGPU is separate) ===
+  # Uncomment when you have a separate LiteLLM instance on MRGPU:
+  # - model_name: manager-auto-mrgpu-primary  
+  #   litellm_params:
+  #     model: ollama_chat/qwen3.5:9b
+  #     api_base: http://192.168.X.Y:4000/v1  # Replace with MRGPU IP
+  #     metadata: {priority: "critical", host: "mrgpu"}
+
+  - model_name: manager-reasoning-turbo
+    litellm_params:
+      model: openai/gemma4-orchestrator  
+      api_base: http://host.docker.internal:8081/v1
+      metadata: {priority: "medium", host: "turboquant"}
+
+  # === PRIORITY 3: CLOUD FALLBACKS (only when local saturated) ===
+  - model_name: manager-reasoning-cloud-fallback  
+    litellm_params:
+      model: ollama_chat/gpt-oss:20b-cloud
+      api_base: http://host.docker.internal:11435/v1
+      metadata: {priority: "low", host: "cloud"}
+
+router_settings:
+  routing_strategy: load-balanced  # Changed from simple-shuffle to prefer local-first
+  
+  # Saturation-aware settings - throttle cloud when local is busy
+  num_retries: 2
+  timeout: 600
+  allowed_fails: 3
+  cooldown_time: 45
+
+# === SATURATION DETECTION & FALLBACK RULES ===  
+litellm_settings:
+  callbacks: ["prometheus"]
+  drop_params: true
+  request_timeout: 600
+  
+  # Enable saturation detection via Prometheus metrics
+  enable_saturation_detection: true
+  
+  # Fallback chain for when local models are saturated
+  fallbacks: null  # Use router_strategy instead
+
+# === MODEL ROUTING RULES (via tok-tua or custom middleware) ===  
+routing_rules:
+  - pattern: ".*-local-first"      # Always try local first
+    priority: 10
+  
+  - pattern: ".*-mrgpu-primary"    # MRGPU host if separate instance exists
+    priority: 9
+    
+  - pattern: ".*-turbo-local-first"  
+    priority: 8
+
+# === PROMETHEUS METRICS FOR SATURATION MONITORING ===
+prometheus_config:
+  enabled: true
+  metrics_path: /metrics
+  
+  # Track per-host saturation (local vs cloud)
+  hosts:
+    - name: local-ollama
+      threshold_percentile: 0.95   # Consider saturated at p95 latency > 2s
+      fallback_to_next_priority: true
+      
+    - name: turboquant  
+      threshold_percentile: 0.95
+      fallback_to_next_priority: true
+
+# === AGENTIC COMMUNICATION & HANDOFF CONFIGURATION ===  
+agent_handoff_rules:
+  # When local model saturates, hand off context to next priority host
+  saturation_threshold_ms: 2000   # Trigger handoff at p95 > 2s
+  
+  # Handoff full conversation history + tool use logs when switching hosts
+  include_full_context_on_handoff: true
+  
+  # Sub-agentic loops can communicate via shared Redis/Postgres state
+  communication_channel: redis
+

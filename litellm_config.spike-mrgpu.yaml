@@ -1,0 +1,71 @@
+# OPT-IN spike workers for MRGPU experiments — NEVER include by default.
+#
+# Usage (gpu-host only, after Comfy/unload, with free VRAM):
+#   export LITELLM_CONFIG_FILE=litellm_config.spike-mrgpu.yaml
+#   # or merge include into a throwaway compose overlay
+#   curl ... -d '{"model":"manager-spike-gemma-26b", ...}'
+#
+# Law:
+#   - Not in host_model_map for manager-code
+#   - Empty fallbacks (no spill into daily coding pin)
+#   - Preflight rejects 26b/27b/30b unless --allow-large
+#   - Bonsai ternary / 1-bit needs non-Ollama backend (llama.cpp/vLLM); stub only
+#
+# Prerequisites (Ollama tags or openai-compatible server):
+#   - gemma4:26b or google gemma-4-26b-a4b QAT (when available on host)
+#   - optional: local openai server for Bonsai ternary
+
+model_list:
+  # Gemma 4 26B-A4B class — edge-of-16GB; unload Comfy first
+  - model_name: manager-spike-gemma-26b
+    litellm_params:
+      model: ollama_chat/gemma4:26b
+      api_base: os.environ/OLLAMA_API_BASE
+      think: false
+      num_ctx: 8192
+      temperature: 0.2
+      top_p: 0.8
+
+  # Same alias family for QAT naming once tag exists on host
+  - model_name: manager-spike-gemma-26b-a4b-qat
+    litellm_params:
+      model: ollama_chat/gemma4:26b
+      api_base: os.environ/OLLAMA_API_BASE
+      think: false
+      num_ctx: 8192
+
+  # Bonsai / ternary 27B — requires external OpenAI-compatible server
+  # Set SPIKE_BONSAI_API_BASE (e.g. llama.cpp --port 8091)
+  - model_name: manager-spike-bonsai-27b
+    litellm_params:
+      model: openai/bonsai-27b
+      api_base: os.environ/SPIKE_BONSAI_API_BASE
+      api_key: local
+
+  # MoE offload experiment (SSD/RAM experts) — research only
+  - model_name: manager-spike-moe-offload
+    litellm_params:
+      model: openai/moe-offload
+      api_base: os.environ/SPIKE_MOE_API_BASE
+      api_key: local
+
+litellm_settings:
+  drop_params: true
+  request_timeout: 600
+  num_retries: 0
+  telemetry: false
+  default_fallbacks: []
+
+router_settings:
+  routing_strategy: simple-shuffle
+  num_retries: 0
+  timeout: 600
+  fallbacks:
+    - manager-spike-gemma-26b: []
+    - manager-spike-gemma-26b-a4b-qat: []
+    - manager-spike-bonsai-27b: []
+    - manager-spike-moe-offload: []
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL

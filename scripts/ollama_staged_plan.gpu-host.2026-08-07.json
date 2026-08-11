@@ -1,0 +1,73 @@
+{
+  "created_at": "2026-08-07T14:00:00+00:00",
+  "host": "gpu-host / mrgpu",
+  "vram_gb": 16,
+  "comfort_max_gb": 12,
+  "tight_max_gb": 15,
+  "coding_pin_law": "manager-code stays ollama_chat/qwen3.5:9b; spikes never default",
+  "download_plane": "Tower FluxDown http://192.168.1.2:17800/ → /mnt/ai-data/_dl → promote",
+  "notes": [
+    "A4B = Gemma-class active-params (e.g. 26B-A4B QAT) — spike only, unload Comfy first",
+    "A7B = only if published tag ≤~12GB Q4 and tool-loop smoke green",
+    "MoE prefer ~3–7B active; nomic-embed-text-v2-moe already present for embeddings",
+    "Do not day-0 pull Inkling-Small / DeepSeek-V4-Flash full weights on 16GB"
+  ],
+  "actions": [
+    {
+      "action": "keep",
+      "model": "qwen3.5:9b",
+      "size_gb": 6.6,
+      "stage": 0,
+      "enabled": true,
+      "status": "present",
+      "role": "coding-pin-default",
+      "litellm_route": "manager-code",
+      "unload_comfy_required": false
+    },
+    {
+      "action": "keep",
+      "model": "qwen2.5-coder:14b",
+      "size_gb": 9.0,
+      "stage": 0,
+      "enabled": true,
+      "status": "present",
+      "role": "coding-heavy-alt-exclusive",
+      "litellm_route": "manager-spike-coder-14b (proposed)",
+      "unload_comfy_required": true
+    },
+    {
+      "action": "probe_then_pull",
+      "model": "gemma4:26b OR gemma-4-26b-a4b QAT tag when listed",
+      "size_gb": 15,
+      "stage": 1,
+      "enabled": true,
+      "status": "pending_tag_verify",
+      "role": "agentic-a4b-spike",
+      "litellm_route": "manager-spike-gemma-26b-a4b-qat",
+      "unload_comfy_required": true,
+      "pull_via": "ollama on mrgpu OR FluxDown GGUF to _dl then ollama create"
+    },
+    {
+      "action": "probe",
+      "model": "qwen3-*-A3B/A4B/A7B MoE GGUF or Ollama",
+      "size_gb": null,
+      "stage": 1,
+      "enabled": true,
+      "status": "research",
+      "role": "agentic-moe",
+      "litellm_route": "manager-spike-moe-offload",
+      "unload_comfy_required": true,
+      "gate": "only if Q4 ≤12GB or TQ SSD offload on M4"
+    },
+    {
+      "action": "reject_default_pin",
+      "model": "qwen3-coder:30b / qwen3.5:27b-q4_K_M",
+      "size_gb": 17,
+      "stage": 99,
+      "enabled": false,
+      "status": "present_but_not_pin",
+      "role": "oversize",
+      "note": "already on disk; never manager-code"
+    }
+  ]
+}
