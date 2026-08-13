@@ -41,6 +41,38 @@ model_list:
   - model_name: manager-worker-m4-phi
     litellm_params: *m4_fast
 
+  # ---- manager-test-m4-* : opt-in heavier tier, NOT default routes --------
+  # INCIDENT 2026-08-12: a direct (non-LiteLLM) load test of qwen3-coder:30b
+  # on this Mac ballooned to 31GB resident (18GB weights + KV cache at the
+  # model's own default 131072 ctx, which ignores any num_ctx set here
+  # unless the request actually goes through LiteLLM) against a 24GB
+  # unified pool already sharing Docker/LiteLLM/editor/browser — froze the
+  # machine solid, required a hard `kill -9` on the runner process plus
+  # `ollama stop` to recover. Real free headroom on this host is well under
+  # the raw 24GB spec once normal daily load is accounted for.
+  # Explicit-call-only (no fallback chain reaches these), same pattern as
+  # manager-test-* in litellm_config.linux.yaml. Do not promote to a
+  # manager-worker-m4-* default without a supervised, low-num_ctx test AND
+  # closing every other heavy app first.
+  - model_name: manager-test-m4-qwen3-coder-30b
+    litellm_params:
+      model: ollama_chat/qwen3-coder:30b
+      api_base: http://host.docker.internal:11434
+      think: false
+      num_ctx: 8192
+      temperature: 0.2
+      top_p: 0.8
+
+  - model_name: manager-test-m4-qwen3-5-27b
+    litellm_params:
+      model: ollama_chat/qwen3.5:27b-q4_K_M
+      api_base: http://host.docker.internal:11434
+      think: false
+      num_ctx: 8192
+      temperature: 0.2
+      top_p: 0.8
+  # ---- end manager-test-m4-* -----------------------------------------------
+
   - model_name: manager-embed
     litellm_params:
       model: openai/nomic-embed-text-v2-moe:latest

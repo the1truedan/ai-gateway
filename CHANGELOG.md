@@ -7,6 +7,36 @@ Commits before this file existed predate versioning and aren't individually
 back-filled here — `git log` is authoritative for that history. This starts
 the tracked record going forward.
 
+## [0.2.1] — 2026-08-12
+
+### Fixed
+
+- **Hister corpus-push automation** (`launchd com.manager.hister-corpus-push`,
+  every 6h): had been silently failing since 2026-08-01 — the public-release
+  sanitization commit (`abeca24`) stripped
+  `scripts/history/push_hister_corpus_to_tower.sh` and its two dependencies
+  (`collect_browser_corpus.py`, `enrich_browser_corpus_md.py`) from HEAD
+  without disabling the job. Recovered all three from git history
+  (`43c3dca`), restored locally as gitignored files (not re-committed —
+  same intent as the original sanitization). Backfilled the ~10-day gap:
+  36,867 browser records (incl. 1,538 PasteBar links), 1,886 shell history
+  rows, 80 Grok CLI session summaries.
+- **`pyproject.toml` version** was still `0.1.0` despite `VERSION` and this
+  file already reading `0.2.0` — synced to `0.2.1`.
+
+### Added
+
+- **`tower-hister`** brought back up on Tower via the existing
+  `deploy/tower-orchestration/docker-compose.yml` service definition (its
+  index data was intact — 1,474+ English-index documents alone — only the
+  container itself was gone). Verified live via its MCP search endpoint.
+- **`tower-open-webui`** brought up the same way. Imported grok.com history
+  (512 conversations from the xAI `prod-grok-backend.json` export) and Grok
+  Build CLI sessions (106 sessions from `~/.grok/sessions`) via
+  `scripts/import/run_openwebui_import.sh --history --build`, applied
+  natively against the live `webui.db` (stop → backup → `sqlite3` apply →
+  restart, backups preserved on Tower).
+
 ## [0.2.0] — 2026-08-11
 
 ### Added

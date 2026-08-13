@@ -8,6 +8,12 @@
 !.env.example
 !**/.env.example
 
+# Private infra scripts (real Tower host/paths/container names — stripped from
+# public history 2026-08-01, restored locally 2026-08-12, never re-commit)
+scripts/history/push_hister_corpus_to_tower.sh
+scripts/history/collect_browser_corpus.py
+scripts/history/enrich_browser_corpus_md.py
+
 # Generated / local-only configs
 litellm_data/
 litellm_config*.merged.yaml
