@@ -7,6 +7,21 @@ Commits before this file existed predate versioning and aren't individually
 back-filled here — `git log` is authoritative for that history. This starts
 the tracked record going forward.
 
+## [0.2.2] — 2026-08-16
+
+### Added
+
+- **GitHub Pages** one-pager (`docs/index.html`): gateway-themed sibling to
+  mok-tua / fast-models. Headroom, LiteLLM, OpenRouter, and Grok get the
+  credit they earned. Origin story in plain language.
+  Live: [the1truedan.github.io/ai-gateway](https://the1truedan.github.io/ai-gateway/)
+
+### Fixed
+
+- Unraid fast-models persist hook docs: `/boot/config/go` must invoke
+  `host-nfs-export.sh` with `bash`. FAT32 has no execute bits; a bare path
+  prints Permission denied and leaves host nfsd down.
+
 ## [0.2.1] — 2026-08-12
 
 ### Fixed

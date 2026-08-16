@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ai-gateway</title>
+<meta name="description" content="One front door for a home AI lab. Headroom in front, LiteLLM as the bus, OpenRouter and Grok in the mix. Glue, not a model runtime." />
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<style>
+  :root {
+    --bg: #0a0d14;
+    --bg-panel: #121722;
+    --bg-panel-2: #181e2c;
+    --line: #273044;
+    --fg: #e7eef8;
+    --fg-dim: #8b97ad;
+    --fg-dimmer: #5c6880;
+    --accent: #6ee7ff;
+    --accent-soft: #9bdfff;
+    --accent-mu: #f0b429;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); }
+  body {
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  .hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+  #gw-rain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.55; }
+  .hero-inner {
+    position: relative; z-index: 1; max-width: 920px; margin: 0 auto;
+    padding: 5.5rem 1.5rem 4rem; text-align: center;
+  }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--accent-soft); margin: 0 0 1.4rem;
+  }
+  .wordmark {
+    margin: 0;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-weight: 700; font-size: clamp(2.4rem, 7vw, 4.4rem);
+    letter-spacing: 0.01em;
+    text-shadow: 0 0 8px rgba(110,231,255,0.45), 0 0 28px rgba(240,180,41,0.18);
+  }
+  .wordmark span { color: var(--accent); }
+  .tagline {
+    max-width: 48ch; margin: 1.4rem auto 0; font-size: 1.1rem;
+    color: var(--fg-dim); text-wrap: balance;
+  }
+  .hero-cta {
+    display: flex; justify-content: center; align-items: center;
+    gap: 0.9rem; flex-wrap: wrap; margin-top: 2.4rem;
+  }
+  .btn {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.85rem; text-decoration: none; padding: 0.65rem 1.1rem;
+    border-radius: 3px; border: 1px solid var(--line);
+    background: var(--bg-panel); color: var(--fg);
+  }
+  .btn:hover, .btn:focus-visible { border-color: var(--accent); color: var(--accent-soft); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 600; }
+  .btn.primary:hover { background: var(--accent-soft); border-color: var(--accent-soft); color: var(--bg); }
+  .version-chip {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.78rem; color: var(--fg-dimmer);
+  }
+  .version-chip b { color: var(--accent-mu); font-weight: 600; }
+
+  section.band { max-width: 980px; margin: 0 auto; padding: 4.2rem 1.5rem; }
+  .section-head { text-align: center; margin-bottom: 2.6rem; }
+  .section-eyebrow {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--fg-dimmer); margin: 0 0 0.7rem;
+  }
+  .section-title { margin: 0; font-size: 1.5rem; font-weight: 600; text-wrap: balance; }
+  .section-sub { max-width: 54ch; margin: 0.7rem auto 0; color: var(--fg-dim); }
+
+  .stack-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+  }
+  .stack-card {
+    background: var(--bg-panel); padding: 1.5rem 1.4rem; display: flex;
+    flex-direction: column; gap: 0.5rem; text-decoration: none; min-height: 156px;
+  }
+  a.stack-card:hover { background: var(--bg-panel-2); }
+  .stack-card .role {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent-soft);
+  }
+  .stack-card h3 { margin: 0; font-size: 1.08rem; font-weight: 600; }
+  .stack-card p { margin: 0; font-size: 0.9rem; color: var(--fg-dim); flex-grow: 1; }
+  .stack-card .link-hint {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.74rem; color: var(--accent-mu);
+  }
+
+  .story { max-width: 62ch; margin: 0 auto; }
+  .story p { color: var(--fg-dim); margin: 0 0 1rem; }
+  .story strong { color: var(--fg); font-weight: 600; }
+  .tl {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.78rem; color: var(--accent-soft); letter-spacing: 0.06em;
+  }
+
+  .cap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.1rem; }
+  .cap-tile {
+    background: var(--bg-panel); border: 1px solid var(--line);
+    border-radius: 6px; padding: 1.5rem;
+  }
+  .cap-tile h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+  .cap-tile p { margin: 0; font-size: 0.88rem; color: var(--fg-dim); }
+
+  footer { border-top: 1px solid var(--line); padding: 2.4rem 1.5rem 3rem; }
+  .footer-inner {
+    max-width: 980px; margin: 0 auto; display: flex;
+    justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+  }
+  .footer-links {
+    display: flex; gap: 1.4rem;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.8rem; color: var(--fg-dim);
+  }
+  .footer-links a { text-decoration: none; }
+  .footer-links a:hover { color: var(--accent-soft); }
+  .mu-mark {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.8rem; color: var(--fg-dimmer);
+  }
+  .mu-mark span { color: var(--accent-mu); }
+
+  @media (max-width: 720px) {
+    .stack-grid, .cap-grid { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { #gw-rain { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <canvas id="gw-rain" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <p class="eyebrow">orchestration glue · not a model runtime</p>
+    <h1 class="wordmark">ai<span>-</span>gateway</h1>
+    <p class="tagline">One front door for a home AI lab. Chat UIs and coding agents aim here instead of five API bases and five failure modes.</p>
+    <div class="hero-cta">
+      <a class="btn primary" href="https://github.com/the1truedan/ai-gateway">View on GitHub</a>
+      <a class="btn" href="https://github.com/the1truedan/ai-gateway/releases/tag/v0.2.2">v0.2.2</a>
+      <a class="btn" href="https://the1truedan.github.io/fast-models/">fast-models</a>
+      <span class="version-chip">v<b>0.2.2</b> · MIT · public</span>
+    </div>
+  </div>
+</div>
+
+<section class="band">
+  <div class="section-head">
+    <p class="section-eyebrow">the door</p>
+    <h2 class="section-title">Clients talk to Headroom. Headroom talks to LiteLLM. LiteLLM fans out.</h2>
+    <p class="section-sub">Default path is thrifty. Raw LiteLLM is still there when you mean to bypass. Fail-open: if a guard is down, the request still goes through.</p>
+  </div>
+  <div class="stack-grid">
+    <a class="stack-card" href="https://github.com/chopratejas/headroom" target="_blank" rel="noopener">
+      <span class="role">thrift</span>
+      <h3>Headroom</h3>
+      <p>The default front door. Compresses context, watches spend, stays fail-open. Clients hit this so a long agent session does not dump a novel into a paid model by accident.</p>
+      <span class="link-hint">github.com/chopratejas/headroom →</span>
+    </a>
+    <a class="stack-card" href="https://github.com/BerriAI/litellm" target="_blank" rel="noopener">
+      <span class="role">bus</span>
+      <h3>LiteLLM</h3>
+      <p>The OpenAI-compatible bus. Aliases in, provider call out, tokens and dollars logged. Local Ollama, host workers, and cloud sit behind the same shape.</p>
+      <span class="link-hint">github.com/BerriAI/litellm →</span>
+    </a>
+    <a class="stack-card" href="https://openrouter.ai" target="_blank" rel="noopener">
+      <span class="role">catalog</span>
+      <h3>OpenRouter</h3>
+      <p>The cheap/free cloud scout lane. Catalog sync keeps a living list of free models so recon work does not have to burn a frontier key.</p>
+      <span class="link-hint">openrouter.ai →</span>
+    </a>
+    <a class="stack-card" href="https://x.ai" target="_blank" rel="noopener">
+      <span class="role">builder + model</span>
+      <h3>Grok / xAI</h3>
+      <p>In the lab as a model, and in the git log as a builder. Grok chats, grok.com history, and Grok Build helped stand this door up — then aimed themselves at it.</p>
+      <span class="link-hint">x.ai · Grok Build →</span>
+    </a>
+  </div>
+</section>
+
+<section class="band">
+  <div class="section-head">
+    <p class="section-eyebrow">how it came to be</p>
+    <h2 class="section-title">Not a product pitch. A door that had to exist.</h2>
+  </div>
+  <div class="story">
+    <p><span class="tl">22 March 2026</span> — earliest vibecoding on record: surplus hardware, a homelab, long Grok threads. Hobby voltage.</p>
+    <p><span class="tl">13 April 2026</span> — the pivot. Real-world harm around a mother’s care made the hobby stop being a hobby. Within a week: an AI/ML certificate path, a caregiver prize track, and <strong>M.A.N.A.G.E.R. LLC</strong> (20 April). The question became: how do you prepare for the care when we cannot be there?</p>
+    <p>This repo grew as <strong>parallel infrastructure</strong> next to the caregiving monorepo. Desk Mac, GPU host, NAS — one OpenAI-shaped door so chat UIs and coding agents (Pi, OpenCode, Claude Code, Codex, Cursor, Grok Build) did not each invent their own base URL and their own outage.</p>
+    <p><strong>Headroom</strong> went in front because stateless chats and paywalls were eating sessions. <strong>LiteLLM</strong> became the bus because every client already spoke that dialect. <strong>OpenRouter</strong> kept a free-model catalog alive so recon could stay cheap. <strong>Grok</strong> was both a coworker under the 31 July deadline and the thread that hopped twitter.com → grok.com → WebUI → local history ingest → this gateway.</p>
+    <p>Then the weights outgrew every machine. The sibling <a href="https://the1truedan.github.io/fast-models/">fast-models</a> pool (NVMe, Btrfs, bees, NFS) is the house behind the doorbell. Public trees are sanitized: no home secrets, no care records, no raw LAN IPs.</p>
+    <p>Fluke or project management — either way the boxes light up.</p>
+  </div>
+</section>
+
+<section class="band">
+  <div class="section-head">
+    <p class="section-eyebrow">what this tree actually is</p>
+    <h2 class="section-title">Glue and ops. The intelligence is upstream.</h2>
+  </div>
+  <div class="cap-grid">
+    <div class="cap-tile">
+      <h3>Compose, not a SaaS</h3>
+      <p>Mac / Linux / NAS-shaped layouts. You bring keys, disks, and judgment.</p>
+    </div>
+    <div class="cap-tile">
+      <h3>Role routing</h3>
+      <p>Plan on a strong model, recon on free or local scouts, execute locally when you can, keep care routes hard-local.</p>
+    </div>
+    <div class="cap-tile">
+      <h3>Fail early</h3>
+      <p>Smoke scripts before a long agent session. A dead stack should fail in seconds, not an hour in.</p>
+    </div>
+    <div class="cap-tile">
+      <h3>Siblings</h3>
+      <p><a href="https://the1truedan.github.io/fast-models/">fast-models</a> holds weights. <a href="https://the1truedan.github.io/mok-tua/">mok-tua</a> turns scripts into pictures. This repo is the door they share.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span class="mu-mark">one door in a larger <span>µ</span>lab · © 2026 M.A.N.A.G.E.R. LLC</span>
+    <nav class="footer-links">
+      <a href="https://github.com/the1truedan/ai-gateway/blob/main/README.md">README</a>
+      <a href="https://github.com/the1truedan/ai-gateway/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/the1truedan/ai-gateway/blob/main/LICENSE">MIT</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var canvas = document.getElementById('gw-rain');
+  if (!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var ctx = canvas.getContext('2d');
+  var hero = canvas.parentElement;
+  var dots = [];
+  function size() {
+    var r = hero.getBoundingClientRect();
+    canvas.width = r.width; canvas.height = r.height;
+    dots = [];
+    var n = Math.max(28, Math.floor(r.width / 36));
+    for (var i = 0; i < n; i++) {
+      dots.push({
+        x: Math.random() * r.width,
+        y: Math.random() * r.height,
+        v: 0.6 + Math.random() * 1.4,
+        w: Math.random() > 0.82
+      });
+    }
+  }
+  size();
+  window.addEventListener('resize', size);
+  function frame() {
+    var w = canvas.width, h = canvas.height, mid = w * 0.5;
+    ctx.fillStyle = 'rgba(10,13,20,0.2)';
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = 'rgba(110,231,255,0.12)';
+    ctx.beginPath();
+    ctx.moveTo(mid, 0); ctx.lineTo(mid, h);
+    ctx.stroke();
+    for (var i = 0; i < dots.length; i++) {
+      var d = dots[i];
+      var pull = (mid - d.x) * 0.012;
+      d.x += pull;
+      d.y += d.v;
+      if (d.y > h + 8) { d.y = -8; d.x = Math.random() * w; }
+      ctx.fillStyle = d.w ? 'rgba(240,180,41,0.7)' : 'rgba(110,231,255,0.45)';
+      ctx.fillRect(d.x, d.y, d.w ? 3 : 2, d.w ? 3 : 2);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

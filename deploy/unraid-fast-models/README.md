@@ -114,7 +114,11 @@ Mounted inside the container at `/ai-data` (NFS root with `fsid=0`):
 
 **Why not container `ENABLE_NFS=1` alone?** Alpine-in-Docker nfsd listens on 2049 and works from Linux, but often **fails to register with host rpcbind**, so macOS `mount_nfs` returns *RPC prog. not avail*. Host nfsd + host mount of the same Btrfs is the reliable dual-client path.
 
-**Persistence:** `/boot/config/plugins/fast-models/host-nfs-export.sh` (also in repo `scripts/host-nfs-export.sh`; hooked from `/boot/config/go` after ~45s) remounts UUID and restarts export.
+**Persistence:** `/boot/config/plugins/fast-models/host-nfs-export.sh` (also in repo `scripts/host-nfs-export.sh`). Hook from `/boot/config/go` after ~45s **via `bash`** — `/boot` is FAT32 and cannot hold execute bits. A bare path in `go` prints Permission denied on the console and leaves nfsd down.
+
+```bash
+( sleep 45; bash /boot/config/plugins/fast-models/host-nfs-export.sh ) &
+```
 
 **Array shares:** use **SMB** (`//<unraid-host>/opt`, Media, …). Do not re-enable Unraid share NFS UI if you want a single clean model-pool export.
 
