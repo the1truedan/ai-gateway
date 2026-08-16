@@ -155,9 +155,9 @@
     <p class="tagline">One front door for a home AI lab. Chat UIs and coding agents aim here instead of five API bases and five failure modes.</p>
     <div class="hero-cta">
       <a class="btn primary" href="https://github.com/the1truedan/ai-gateway">View on GitHub</a>
-      <a class="btn" href="https://github.com/the1truedan/ai-gateway/releases/tag/v0.2.3">v0.2.3</a>
+      <a class="btn" href="https://github.com/the1truedan/ai-gateway/releases/tag/v0.2.4">v0.2.4</a>
       <a class="btn" href="https://the1truedan.github.io/fast-models/">fast-models</a>
-      <span class="version-chip">v<b>0.2.3</b> · MIT · public</span>
+      <span class="version-chip">v<b>0.2.4</b> · MIT · public</span>
     </div>
   </div>
 </div>
@@ -210,6 +210,52 @@
 
 <section class="band">
   <div class="section-head">
+    <p class="section-eyebrow">around the door</p>
+    <h2 class="section-title">Chat, search, life memory, placement, session index</h2>
+    <p class="section-sub">Same lab, different jobs. AgentsView is a standalone stack on purpose — the index should survive a LiteLLM outage.</p>
+  </div>
+  <div class="stack-grid">
+    <a class="stack-card" href="https://github.com/the1truedan/ai-gateway/tree/main/deploy/agentsview" target="_blank" rel="noopener">
+      <span class="role">session index</span>
+      <h3>AgentsView</h3>
+      <p>24/7 archive of CLI-agent sessions. IDs and titles only — never a bulk transcript reload. Own compose file, own Postgres, shared network.</p>
+      <span class="link-hint">deploy/agentsview →</span>
+    </a>
+    <a class="stack-card" href="https://github.com/open-webui/open-webui" target="_blank" rel="noopener">
+      <span class="role">chat UI</span>
+      <h3>Open WebUI</h3>
+      <p>Browser chat pointed at Headroom (or a LiteLLM bypass). Where grok.com history and Grok Build sessions land after import.</p>
+      <span class="link-hint">github.com/open-webui/open-webui →</span>
+    </a>
+    <a class="stack-card" href="https://github.com/asciimoo/hister" target="_blank" rel="noopener">
+      <span class="role">search</span>
+      <h3>Hister</h3>
+      <p>Local search over browser corpus, shell history, and session notes. Profile <code>search</code>. Not a cloud index.</p>
+      <span class="link-hint">github.com/asciimoo/hister →</span>
+    </a>
+    <a class="stack-card" href="https://github.com/botmem/botmem" target="_blank" rel="noopener">
+      <span class="role">life memory</span>
+      <h3>botmem</h3>
+      <p>Personal / life system of record. Compose profile <code>memory</code>. Distinct from hippo (agent memory) and PMB (project index).</p>
+      <span class="link-hint">github.com/botmem/botmem →</span>
+    </a>
+    <a class="stack-card" href="https://github.com/the1truedan/ai-gateway" target="_blank" rel="noopener">
+      <span class="role">placement</span>
+      <h3>Orchestrator</h3>
+      <p>Host + role placement in front of LiteLLM. Capacity-agent reports what’s free. Prompt-I/O scores traffic fail-open — a belt, not a gate, today.</p>
+      <span class="link-hint">this repo · services/orchestrator →</span>
+    </a>
+    <a class="stack-card" href="https://github.com/the1truedan/grok-tua-tok-tua" target="_blank" rel="noopener">
+      <span class="role">launchers</span>
+      <h3>grok-tua / tok-tua</h3>
+      <p>Start Pi, OpenCode, and friends already aimed at Headroom, with a health/spend pane so you see the door before a long session.</p>
+      <span class="link-hint">github.com/the1truedan/grok-tua-tok-tua →</span>
+    </a>
+  </div>
+</section>
+
+<section class="band">
+  <div class="section-head">
     <p class="section-eyebrow">how it came to be</p>
     <h2 class="section-title">Not a product pitch. A door that had to exist.</h2>
   </div>
@@ -218,6 +264,7 @@
     <p><span class="tl">13 April 2026</span> — the pivot. Real-world harm around a mother’s care made the hobby stop being a hobby. Within a week: an AI/ML certificate path, a caregiver prize track, and <strong>M.A.N.A.G.E.R. LLC</strong> (20 April). The question became: how do you prepare for the care when we cannot be there?</p>
     <p>This repo grew as <strong>parallel infrastructure</strong> next to the caregiving monorepo. Desk Mac, GPU host, NAS — one OpenAI-shaped door so chat UIs and coding agents (Pi, OpenCode, Claude Code, Codex, Cursor, Grok Build) did not each invent their own base URL and their own outage.</p>
     <p><strong>Headroom</strong> went in front because stateless chats and paywalls were eating sessions. <strong>LiteLLM</strong> became the bus because every client already spoke that dialect. <strong>OpenRouter</strong> kept a free-model catalog alive so recon could stay cheap. <strong>Grok</strong> was both a coworker under the 31 July deadline and the thread that hopped twitter.com → grok.com → WebUI → local history ingest → this gateway. <strong>Hippo</strong> and <strong>PMB</strong> landed next so the door had a memory: hippo for what an agent explicitly remembered, PMB for what the repo already knew.</p>
+    <p><strong>AgentsView</strong> is the session index — IDs and titles across Claude Code, Codex, Grok Build, OpenCode — not a transcript dump. It runs as its own compose stack so a chat-stack outage does not take the archive with it.</p>
     <p>Then the weights outgrew every machine. The sibling <a href="https://the1truedan.github.io/fast-models/">fast-models</a> pool (NVMe, Btrfs, bees, NFS) is the house behind the doorbell. Public trees are sanitized: no home secrets, no care records, no raw LAN IPs.</p>
     <p>Fluke or project management — either way the boxes light up.</p>
   </div>

@@ -7,6 +7,14 @@ Commits before this file existed predate versioning and aren't individually
 back-filled here — `git log` is authoritative for that history. This starts
 the tracked record going forward.
 
+## [0.2.4] — 2026-08-16
+
+### Added
+
+- Pages: **AgentsView**, Open WebUI, Hister, botmem, orchestrator, grok-tua/tok-tua
+  as a second “around the door” row. AgentsView is a standalone stack so the
+  session index can stay up when the chat bus is down.
+
 ## [0.2.3] — 2026-08-16
 
 ### Added
