@@ -82,7 +82,7 @@
   .section-sub { max-width: 54ch; margin: 0.7rem auto 0; color: var(--fg-dim); }
 
   .stack-grid {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
     background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
   }
   .stack-card {
@@ -136,6 +136,9 @@
   }
   .mu-mark span { color: var(--accent-mu); }
 
+  @media (max-width: 900px) {
+    .stack-grid { grid-template-columns: repeat(2, 1fr); }
+  }
   @media (max-width: 720px) {
     .stack-grid, .cap-grid { grid-template-columns: 1fr; }
   }
@@ -152,9 +155,9 @@
     <p class="tagline">One front door for a home AI lab. Chat UIs and coding agents aim here instead of five API bases and five failure modes.</p>
     <div class="hero-cta">
       <a class="btn primary" href="https://github.com/the1truedan/ai-gateway">View on GitHub</a>
-      <a class="btn" href="https://github.com/the1truedan/ai-gateway/releases/tag/v0.2.2">v0.2.2</a>
+      <a class="btn" href="https://github.com/the1truedan/ai-gateway/releases/tag/v0.2.3">v0.2.3</a>
       <a class="btn" href="https://the1truedan.github.io/fast-models/">fast-models</a>
-      <span class="version-chip">v<b>0.2.2</b> · MIT · public</span>
+      <span class="version-chip">v<b>0.2.3</b> · MIT · public</span>
     </div>
   </div>
 </div>
@@ -190,6 +193,18 @@
       <p>In the lab as a model, and in the git log as a builder. Grok chats, grok.com history, and Grok Build helped stand this door up — then aimed themselves at it.</p>
       <span class="link-hint">x.ai · Grok Build →</span>
     </a>
+    <a class="stack-card" href="https://github.com/kitfunso/hippo-memory" target="_blank" rel="noopener">
+      <span class="role">agent memory</span>
+      <h3>hippo-memory</h3>
+      <p>Per-repo <code>.hippo/</code> store via MCP. Agents remember and recall in the same place, so switching Claude Code → Grok Build → Codex is a handoff, not a reset. Not botmem (life memory).</p>
+      <span class="link-hint">github.com/kitfunso/hippo-memory →</span>
+    </a>
+    <a class="stack-card" href="https://github.com/pmb-ai/pmb" target="_blank" rel="noopener">
+      <span class="role">project memory</span>
+      <h3>PMB</h3>
+      <p>Indexes the project’s own code and docs. Recall returns the relevant slice so a new session does not re-paste the whole history. Local embeddings. Pin the workspace or it can bleed across projects.</p>
+      <span class="link-hint">github.com/pmb-ai/pmb →</span>
+    </a>
   </div>
 </section>
 
@@ -202,7 +217,7 @@
     <p><span class="tl">22 March 2026</span> — earliest vibecoding on record: surplus hardware, a homelab, long Grok threads. Hobby voltage.</p>
     <p><span class="tl">13 April 2026</span> — the pivot. Real-world harm around a mother’s care made the hobby stop being a hobby. Within a week: an AI/ML certificate path, a caregiver prize track, and <strong>M.A.N.A.G.E.R. LLC</strong> (20 April). The question became: how do you prepare for the care when we cannot be there?</p>
     <p>This repo grew as <strong>parallel infrastructure</strong> next to the caregiving monorepo. Desk Mac, GPU host, NAS — one OpenAI-shaped door so chat UIs and coding agents (Pi, OpenCode, Claude Code, Codex, Cursor, Grok Build) did not each invent their own base URL and their own outage.</p>
-    <p><strong>Headroom</strong> went in front because stateless chats and paywalls were eating sessions. <strong>LiteLLM</strong> became the bus because every client already spoke that dialect. <strong>OpenRouter</strong> kept a free-model catalog alive so recon could stay cheap. <strong>Grok</strong> was both a coworker under the 31 July deadline and the thread that hopped twitter.com → grok.com → WebUI → local history ingest → this gateway.</p>
+    <p><strong>Headroom</strong> went in front because stateless chats and paywalls were eating sessions. <strong>LiteLLM</strong> became the bus because every client already spoke that dialect. <strong>OpenRouter</strong> kept a free-model catalog alive so recon could stay cheap. <strong>Grok</strong> was both a coworker under the 31 July deadline and the thread that hopped twitter.com → grok.com → WebUI → local history ingest → this gateway. <strong>Hippo</strong> and <strong>PMB</strong> landed next so the door had a memory: hippo for what an agent explicitly remembered, PMB for what the repo already knew.</p>
     <p>Then the weights outgrew every machine. The sibling <a href="https://the1truedan.github.io/fast-models/">fast-models</a> pool (NVMe, Btrfs, bees, NFS) is the house behind the doorbell. Public trees are sanitized: no home secrets, no care records, no raw LAN IPs.</p>
     <p>Fluke or project management — either way the boxes light up.</p>
   </div>

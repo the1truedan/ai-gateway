@@ -1,6 +1,6 @@
 # ai-gateway
 
-[![Version](https://img.shields.io/badge/version-0.2.2-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.2.3-blue.svg)](CHANGELOG.md)
 [![Pages](https://img.shields.io/badge/pages-ai--gateway-6ee7ff.svg)](https://the1truedan.github.io/ai-gateway/)
 
 One front door for the models and tools in a home AI lab — chat UIs, coding
@@ -10,8 +10,8 @@ API bases and five different failure modes.
 This repo is **glue and ops**, not a from-scratch model runtime. The value is
 wiring known open-source pieces so they behave as one stack.
 
-**Current release:** [`v0.2.2`](CHANGELOG.md) — public one-pager + Unraid
-`bash` persist note. Site: [the1truedan.github.io/ai-gateway](https://the1truedan.github.io/ai-gateway/).
+**Current release:** [`v0.2.3`](CHANGELOG.md) — Pages one-pager now includes
+Hippo + PMB. Site: [the1truedan.github.io/ai-gateway](https://the1truedan.github.io/ai-gateway/).
 See [CHANGELOG.md](CHANGELOG.md) for dated detail.
 
 ## Stack map (what is actually in play — as of v0.2.0)

@@ -7,6 +7,13 @@ Commits before this file existed predate versioning and aren't individually
 back-filled here — `git log` is authoritative for that history. This starts
 the tracked record going forward.
 
+## [0.2.3] — 2026-08-16
+
+### Added
+
+- Pages one-pager now credits **hippo-memory** (per-repo agent recall) and
+  **PMB** (per-project indexed memory). Both were already in the stack map.
+
 ## [0.2.2] — 2026-08-16
 
 ### Added
