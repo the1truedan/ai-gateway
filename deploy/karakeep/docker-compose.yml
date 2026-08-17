@@ -1,0 +1,56 @@
+# Karakeep — self-hosted bookmark manager with local-LLM auto-tagging.
+# Deployed for URLLM (github.com/the1truedan/URLLM): the AI-tagging backend
+# URLLM's canonical bookmark set feeds into, rather than URLLM reimplementing
+# tagging itself.
+#
+# Upstream compose: github.com/karakeep-app/karakeep/blob/main/docker/docker-compose.yml
+# (mirrored here, not vendored as a submodule, so Tower-specific values —
+# appdata paths, LAN NEXTAUTH_URL, MRGPU as the AI provider — live in one
+# reviewable file instead of an override layer).
+#
+# Deploy: docker compose --env-file .env up -d   (from this directory, on Tower)
+services:
+  web:
+    image: ghcr.io/karakeep-app/karakeep:${KARAKEEP_VERSION:-release}
+    container_name: tower-karakeep
+    restart: unless-stopped
+    volumes:
+      - /mnt/user/appdata/karakeep/data:/data
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      MEILI_ADDR: http://meilisearch:7700
+      BROWSER_WEB_URL: http://chrome:9222
+      DATA_DIR: /data
+      # MRGPU's Ollama via its OpenAI-compatible endpoint — matches URLLM's
+      # own embedding-endpoint choice (docs/ARCHITECTURE.md in the URLLM
+      # repo) and Hister's existing convention, not a new one invented here.
+      OPENAI_API_KEY: ollama
+      OPENAI_BASE_URL: http://192.168.1.5:11434/v1
+      INFERENCE_TEXT_MODEL: qwen3.5:9b
+    depends_on:
+      - meilisearch
+      - chrome
+  chrome:
+    image: ghcr.io/karakeep-app/karakeep-chrome:release
+    container_name: tower-karakeep-chrome
+    restart: unless-stopped
+    init: true
+    command:
+      - --disable-gpu
+      - --disable-dev-shm-usage
+      - --hide-scrollbars
+      - --disable-blink-features=AutomationControlled
+      - --window-size=1440,900
+  meilisearch:
+    image: getmeili/meilisearch:v1.41.0
+    container_name: tower-karakeep-meilisearch
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - /mnt/user/appdata/karakeep/meilisearch:/meili_data
