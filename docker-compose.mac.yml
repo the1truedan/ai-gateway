@@ -80,7 +80,8 @@ services:
         condition: service_healthy
     networks:
       - ai-gateway
-
+    volumes:
+      - ./config/orchestrator/live/routes.json:/app/config/routes.json:ro
   openwebui-importer:
     platform: linux/arm64
 
@@ -97,17 +98,17 @@ volumes:
     driver: local
     driver_opts:
       type: nfs
-      o: addr=${AI_NFS_ADDR:-<nas-host-ip>},rw,nfsvers=3
+      o: addr=${AI_NFS_ADDR:-192.168.1.2},rw,nfsvers=3,nolock,tcp
       device: :/mnt/ai-data/uv-cache
   shared-models:
     driver: local
     driver_opts:
       type: nfs
-      o: addr=${AI_NFS_ADDR:-<nas-host-ip>},ro,nfsvers=3
+      o: addr=${AI_NFS_ADDR:-192.168.1.2},ro,nfsvers=3,nolock,tcp
       device: :/mnt/ai-data/models
   shared-code:
     driver: local
     driver_opts:
       type: nfs
-      o: addr=${AI_NFS_ADDR:-<nas-host-ip>},ro,nfsvers=3
+      o: addr=${AI_NFS_ADDR:-192.168.1.2},ro,nfsvers=3,nolock,tcp
       device: :/mnt/ai-data/codebase-mirror
