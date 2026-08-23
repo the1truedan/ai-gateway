@@ -102,6 +102,19 @@ model_list:
       temperature: 0.2
       top_p: 0.8
 
+  # Cross-host proxy, same rationale as manager-worker-mrgpu-reason above:
+  # gbrain's manager-embed calls were resolving to THIS host's own local
+  # Ollama (api_base: host.docker.internal) instead of mrgpu, found during
+  # a 2026-08-23 log audit of :4000/ui/logs/. New alias so the existing
+  # manager-embed name (relied on by other local consumers) is untouched;
+  # gbrain repoints via GBRAIN_EMBEDDING_MODEL. Same model as mrgpu's own
+  # manager-embed alias (linux.yaml) for vector compatibility.
+  - model_name: manager-embed-mrgpu
+    litellm_params:
+      model: openai/nomic-embed-text-v2-moe:latest
+      api_base: http://192.168.1.5:11434/v1
+      api_key: local
+
 litellm_settings:
   drop_params: true
   request_timeout: 120
