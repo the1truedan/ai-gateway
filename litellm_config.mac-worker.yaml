@@ -86,12 +86,28 @@ model_list:
       model: openrouter/openrouter/free
       api_key: os.environ/OPENROUTER_API_KEY
 
+  # Cross-host proxy: gbrain's MCP daemon is wired direct to THIS LiteLLM
+  # (bypasses Headroom — required carve-out, embeddings 404 through Headroom
+  # stack-wide) so it has no way to reach mrgpu's own LiteLLM for its
+  # background chat/reasoning tier. This entry lets gbrain still honor
+  # mrgpu-first by forwarding straight to mrgpu's Ollama over LAN. Same
+  # model (gemma4:12b) as mrgpu's own manager-worker-mrgpu-reason alias —
+  # 2026-08-23, root cause: gbrain-gpt-5.6-terra-400-loop.
+  - model_name: manager-worker-mrgpu-reason
+    litellm_params:
+      model: ollama_chat/gemma4:12b
+      api_base: http://192.168.1.5:11434
+      think: false
+      num_ctx: 32768
+      temperature: 0.2
+      top_p: 0.8
+
 litellm_settings:
   drop_params: true
   request_timeout: 120
   num_retries: 1
   telemetry: false
-  store_prompts_in_spend_logs: false
+  store_prompts_in_spend_logs: true
   maximum_spend_logs_retention_period: "90d"
 
 general_settings:
