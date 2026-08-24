@@ -49,6 +49,25 @@ services:
     networks:
       - ai-gateway
 
+  # Dedicated response-cache redis for LiteLLM (litellm_settings.cache below).
+  # Deliberately separate from botmem-redis (2026-08-23 AOF-corruption incident
+  # showed a shared instance couples unrelated blast radii) — pure cache, no
+  # persistence, so a corruption/restart just means cold cache, never data loss.
+  litellm-redis:
+    image: redis:7.4-alpine
+    container_name: litellm-redis
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - ai-gateway
+
   litellm:
     image: ${LITELLM_IMAGE:-ghcr.io/berriai/litellm@sha256:0f0a2e85b3771af16074117d9054cc43830f27d20ef7a0fa7908594f59a8dbc0}
     container_name: litellm-proxy
@@ -78,6 +97,9 @@ services:
       - MIMO_API_BASE=${MIMO_API_BASE:-https://api.xiaomimimo.com/v1}
       - MIMO_API_KEY=${MIMO_API_KEY:-}
       - DATABASE_URL=postgresql://llmproxy:${LITELLM_DB_PASSWORD:-litellm_local_db}@litellm-db:5432/litellm
+      # Required for Admin UI-driven config writes (MCP servers, tool filtering, etc)
+      # to persist to Postgres instead of failing with "Set STORE_MODEL_IN_DB=True"
+      - STORE_MODEL_IN_DB=True
       # Hybrid parallel prompt I/O (profile security: prompt-io service)
       - PROMPT_IO_BASE=${PROMPT_IO_BASE:-http://prompt-io:5050}
       - PROMPT_IO_TIMEOUT=${PROMPT_IO_TIMEOUT:-0.5}
@@ -90,6 +112,8 @@ services:
     restart: unless-stopped
     depends_on:
       litellm-db:
+        condition: service_healthy
+      litellm-redis:
         condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
