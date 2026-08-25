@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Daily OpenRouter free-model refresh: sync -> reconcile -> restart litellm-proxy
+     if the model set changed -> commit+push the regenerated catalog doc.
+     Install:
+       cp deploy/launchd/com.manager.openrouter-free-refresh.plist ~/Library/LaunchAgents/
+       launchctl load ~/Library/LaunchAgents/com.manager.openrouter-free-refresh.plist
+-->
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.manager.openrouter-free-refresh</string>
+  <key>ProgramArguments</key><array>
+    <string>/bin/bash</string>
+    <string>/Users/dtm/ai-gateway/scripts/openrouter_free_daily_refresh.sh</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/dtm/ai-gateway</string>
+  <key>StartCalendarInterval</key><dict>
+    <key>Hour</key><integer>5</integer>
+    <key>Minute</key><integer>0</integer>
+  </dict>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>/tmp/manager-openrouter-free-refresh.out.log</string>
+  <key>StandardErrorPath</key><string>/tmp/manager-openrouter-free-refresh.err.log</string>
+</dict></plist>

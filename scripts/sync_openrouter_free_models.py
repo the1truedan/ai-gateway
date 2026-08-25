@@ -392,7 +392,14 @@ def main() -> int:
     write_catalog(args.catalog, free_models, entries, generated_at)
     write_markdown(args.markdown, free_models, entries, generated_at)
 
-    changed = yaml_text != previous
+    # Compare only the model_list section — the header carries a fresh
+    # generated_at timestamp every run, which made this always report
+    # changed=true (and would restart litellm-proxy daily for no reason).
+    def _model_list_only(text: str) -> str:
+        idx = text.find("model_list:")
+        return text[idx:] if idx != -1 else text
+
+    changed = _model_list_only(yaml_text) != _model_list_only(previous)
     print(
         f"Synced {len(free_models)} free OpenRouter models -> {len(entries)} LiteLLM aliases"
     )
