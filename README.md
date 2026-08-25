@@ -238,7 +238,7 @@ Local capture index (ops only): [`docs/assets/stack-local/AI_GATEWAY_CAPTURES.md
 | **[Pi](https://github.com/badlogic/pi-mono)** | Terminal coding agent; models JSON → Headroom | [badlogic/pi-mono](https://github.com/badlogic/pi-mono) |
 | **[Oh My Pi (OMP)](https://github.com/acidsugarx/oh-my-pi)** | Pi-oriented harness / tooling (model lists under `config/clients/omp.*.yml`) | [acidsugarx/oh-my-pi](https://github.com/acidsugarx/oh-my-pi) |
 | **[OpenCode](https://github.com/anomalyco/opencode)** | Terminal coding agent; provider snippets → Headroom | [anomalyco/opencode](https://github.com/anomalyco/opencode) · [opencode.ai](https://opencode.ai) |
-| **Claude Code / Codex / Cursor / Grok Build** | Third-party CLIs/IDEs using the same `OPENAI_BASE_URL` → Headroom or LiteLLM | Anthropic, OpenAI, Cursor, xAI respectively |
+| **Claude Code / Codex / Cursor / Grok Build** | Third-party CLIs/IDEs using the same `OPENAI_BASE_URL` → Headroom or LiteLLM | [Claude Code](https://claude.com/claude-code) · [Codex](https://github.com/openai/codex) · [Cursor](https://cursor.com) · [Grok Build](https://x.ai/news/grok-build-cli) |
 
 Lab launchers that sit *beside* those CLIs:
 
@@ -254,7 +254,8 @@ Lab launchers that sit *beside* those CLIs:
 | **[botmem](https://github.com/botmem/botmem)** | Personal / life memory SoR (compose profile `memory`) | [botmem/botmem](https://github.com/botmem/botmem) · images `ghcr.io/botmem/botmem` |
 | **[hippo-memory](https://github.com/kitfunso/hippo-memory)** | Agent/coding memory under `.hippo/` per repo (host MCP, not the same as botmem) | [kitfunso/hippo-memory](https://github.com/kitfunso/hippo-memory) · npm `hippo-memory` |
 | **[PMB](https://github.com/pmb-ai/pmb)** | Per-project semantic memory: code/doc indexing + local embedding + recall | [pmb-ai/pmb](https://github.com/pmb-ai/pmb) |
-| **AgentsView** | Session-history viewer across CLI agents (Claude Code, Codex, Grok, OpenCode, …) — index only, no bulk transcript dumping | This org (internal) |
+| **[AgentsView](https://github.com/kenn-io/agentsview)** | Local-first session search, analytics, and token-use stats across 20+ coding agents (Claude Code, Codex, and more) | [kenn-io/agentsview](https://github.com/kenn-io/agentsview) (not internal) |
+| **[gbrain](https://github.com/garrytan/gbrain)** | Persistent, git-backed knowledge brain for agent workflows — pages/entities/timeline over a PGLite-backed store with hybrid semantic search, exposed via MCP (`put_page` / `get_page` / `query` / `recall` / …); hooks auto-inject relevant context into every session | [garrytan/gbrain](https://github.com/garrytan/gbrain) (not internal) |
 | **[Turnstone](https://github.com/turnstonelabs/turnstone)** | Optional agent/orchestration client path through Headroom | [turnstonelabs/turnstone](https://github.com/turnstonelabs/turnstone) |
 | **AIDA / vision-embed / prompt-io** | Lab services in `services/` (document helpers, embeddings, metrics) | This repo (sanitized) |
 | **llmtrace-proxy** | Optional request tracing | `ghcr.io/techlab-innov/llmtrace-proxy` |
@@ -267,7 +268,7 @@ botmem ≠ hippo: life memory vs agent/project memory. See `config/clients/memor
 |-------|------|----------|
 | **[fast-models](https://github.com/the1truedan/fast-models)** | Unraid Docker stack: dual NVMe → Btrfs pool → NFS **ai-data** | This org |
 | **[bees](https://github.com/Zygo/bees)** | Best-Effort Extent-Same — Btrfs online dedupe agent (block/extent level, whole-pool) | [Zygo/bees](https://github.com/Zygo/bees) |
-| **FluxDown** | Self-hosted download queue for staging model weights (HTTP / Hugging Face / Civitai) before they land in the shared pool | This org (internal) |
+| **[FluxDown](https://github.com/zerx-lab/FluxDown)** | Rust multi-protocol download manager (HTTP/FTP/BitTorrent, HLS/DASH streams) used to stage model weights before they land in the shared pool | [zerx-lab/FluxDown](https://github.com/zerx-lab/FluxDown) (not internal) |
 | **rsync promote step** | Staged downloads move into the pool via plain `rsync` (no `--delete`) — additive only, originals kept until a soak period passes | Standard `rsync` |
 | **Johnny Appleseed + C.H.I.P.P.E.R. + C.H.A.I.N.S.** | Catalog + dedup-job scheduling + custody/audit receipts for the model/tool pool: Johnny indexes content digests, CHIPPER schedules the hash/index/stage passes, CHAINS records what got promoted or quarantined and why. Sits above bees (which stays the physical L3 layer underneath) — a content-hash ladder (size → sample → full SHA256), not a replacement for it | This org (internal design) |
 | **Prometheus + Grafana** | Metrics / bees occupancy dashboards | [prometheus](https://prometheus.io/) · [grafana](https://grafana.com/) |
