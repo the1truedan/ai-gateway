@@ -113,12 +113,13 @@ model_list:
       model: ollama_chat/gpt-oss:20b-cloud
       api_base: http://host.docker.internal:11434
 
-  # Local embeddings (Hister / RAG) — Ollama nomic on host
+  # Canonical embeddings (Hister / RAG) — MRGPU Ollama nomic, 768d.
+  # Keep this stable public alias aligned with manager-embed-mrgpu below.
   - model_name: manager-embed
     litellm_params:
       model: openai/nomic-embed-text-v2-moe:latest
-      api_base: http://host.docker.internal:11434/v1
-      api_key: ollama
+      api_base: http://192.168.1.5:11434/v1
+      api_key: local
 
   # Cross-host proxy, same rationale as manager-worker-mrgpu-reason above:
   # gbrain's embed calls need mrgpu's own nomic-embed instance, not M4RV's.

@@ -293,7 +293,7 @@ services:
     environment:
       - HISTER__SERVER__ADDRESS=0.0.0.0:4433
       - HISTER__SERVER__BASE_URL=http://localhost:4433
-      # Semantic search via host Ollama nomic (768d). Prefer LiteLLM manager-embed by setting:
+      # Semantic search via LiteLLM manager-embed → MRGPU Ollama nomic (768d):
       #   HISTER__SEMANTIC_SEARCH__EMBEDDING_ENDPOINT=http://litellm:4000/v1/embeddings
       #   HISTER__SEMANTIC_SEARCH__EMBEDDING_MODEL=manager-embed
       #   HISTER__SEMANTIC_SEARCH__API_KEY=${LITELLM_MASTER_KEY}

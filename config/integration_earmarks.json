@@ -225,7 +225,7 @@
         "litellm_config.yaml",
         "litellm_config.linux.yaml"
       ],
-      "notes": "manager-embed \u2192 Ollama nomic-embed-text-v2-moe:latest (768 dims) via /v1/embeddings"
+      "notes": "manager-embed \u2192 MRGPU Ollama nomic-embed-text-v2-moe:latest (768 dims) via /v1/embeddings; Headroom is not in the embedding path"
     },
     {
       "id": "openwiki-ai-gateway",

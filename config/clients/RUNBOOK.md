@@ -286,8 +286,9 @@ cd ~/ai-gateway
 #   cd ~/GitHub/hister && docker compose up -d
 ```
 
-Semantic search defaults (compose profile) use host Ollama nomic 768d.  
-To route embeddings through LiteLLM `manager-embed`, set in `.env` or shell before up:
+Semantic search defaults use LiteLLM `manager-embed`, which routes directly to
+MRGPU Ollama nomic (768d). Headroom remains the chat/completions ingress and does
+not proxy `/v1/embeddings`. To override the defaults explicitly, set:
 
 ```bash
 export HISTER_EMBEDDING_ENDPOINT=http://litellm:4000/v1/embeddings
