@@ -1,6 +1,6 @@
 # OpenRouter free models (via AI-Gateway)
 
-_Auto-generated 2026-08-25T03:44:27.041931+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
+_Auto-generated 2026-08-25T03:55:13.277087+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
 
 Source: [openrouter.ai/models?max_price=0](https://openrouter.ai/models?max_price=0)
 
