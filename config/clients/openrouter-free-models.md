@@ -1,6 +1,6 @@
 # OpenRouter free models (via AI-Gateway)
 
-_Auto-generated 2026-08-10T22:31:27.992477+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
+_Auto-generated 2026-08-25T03:44:27.041931+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
 
 Source: [openrouter.ai/models?max_price=0](https://openrouter.ai/models?max_price=0)
 
@@ -11,7 +11,7 @@ export OPENAI_BASE_URL=http://localhost:4000/v1
 export OPENAI_API_KEY="$LITELLM_MASTER_KEY"
 # Curated:
 #   manager-openrouter-free / tier-free-cloud  → openrouter/free router
-#   manager-big-context / manager-understand-audit → qwen/qwen3-coder:free
+#   manager-big-context / manager-understand-audit → defined in litellm_config.yaml, not here
 #   manager-audit-claude → poolside/laguna-xs-2.1:free
 # Direct free alias: or-free-<slug>
 ```
@@ -21,24 +21,26 @@ so Prometheus, retries, and fallbacks apply.
 
 ## Catalog
 
-**14** free chat-candidate models → **16** LiteLLM aliases (includes curated names).
+**16** free chat-candidate models → **18** LiteLLM aliases (includes curated names).
 
 | OpenRouter id | LiteLLM alias(es) | Ctx | Modality | Role |
 |---------------|-------------------|-----|----------|------|
+| `thinkingmachines/inkling-small:free` | `or-free-thinkingmachines-inkling-small-free` | 1.0M | text+image+audio->text | General free chat |
+| `thinkingmachines/inkling:free` | `or-free-thinkingmachines-inkling-free` | 1.0M | text+image+audio->text | General free chat |
+| `nvidia/nemotron-3.5-lightning:free` | `or-free-nvidia-nemotron-3-5-lightning-free` | 1M | text->text | General free chat |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | `or-free-nvidia-nemotron-3-ultra-550b-a55b-free` | 1M | text->text | Frontier reasoning / orchestration |
-| `inclusionai/ling-3.0-tiny:free` | `or-free-inclusionai-ling-3-0-tiny-free` | 262k | text->text | General free chat |
+| `dots-studio/dots-3-note-preview:free` | `or-free-dots-studio-dots-3-note-preview-free` | 512k | text+image->text | General free chat |
 | `poolside/laguna-s-2.1:free` | `or-free-poolside-laguna-s-2-1-free` | 262k | text->text | General free chat |
 | `poolside/laguna-xs-2.1:free` | `manager-audit-claude`, `or-free-poolside-laguna-xs-2-1-free` | 262k | text->text | Lighter coding agent (curated audit) |
 | `google/gemma-4-26b-a4b-it:free` | `or-free-google-gemma-4-26b-a4b-it-free` | 262k | text+image+video->text | Free multimodal MoE VLM |
 | `google/gemma-4-31b-it:free` | `or-free-google-gemma-4-31b-it-free` | 262k | text+image+video->text | Free multimodal VLM (image/video→text) |
 | `nvidia/nemotron-3-super-120b-a12b:free` | `or-free-nvidia-nemotron-3-super-120b-a12b-free` | 262k | text->text | Strong general MoE, efficient active params |
 | `cohere/north-mini-code:free` | `or-free-cohere-north-mini-code-free` | 256k | text->text | Agentic coding (North family) |
+| `z-ai/glm-5.2:free` | `or-free-z-ai-glm-5-2-free` | 256k | text->text | General free chat |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | `or-free-nvidia-nemotron-3-nano-omni-30b-a3b-reasoning-free` | 256k | text+image+audio+video->text | Multimodal perception / sub-agent |
-| `nvidia/nemotron-3-nano-30b-a3b:free` | `or-free-nvidia-nemotron-3-nano-30b-a3b-free` | 256k | text->text | Efficient small MoE for agents |
 | `openrouter/free` | `manager-openrouter-free`, `or-free-openrouter-free` | 200k | text+image->text | Router: random free model (unpredictable) |
-| `openai/gpt-oss-20b:free` | `or-free-openai-gpt-oss-20b-free` | 131k | text->text | Small OSS baseline |
-| `nvidia/nemotron-nano-12b-v2-vl:free` | `or-free-nvidia-nemotron-nano-12b-v2-vl-free` | 128k | text+image+video->text | Video/image VL reasoning |
-| `nvidia/nemotron-nano-9b-v2:free` | `or-free-nvidia-nemotron-nano-9b-v2-free` | 128k | text->text | Tiny efficient LLM |
+| `minimax/minimax-m2.7:free` | `or-free-minimax-minimax-m2-7-free` | 196k | text->text | General free chat |
+| `liquid/lfm-2.5-2.6b:free` | `or-free-liquid-lfm-2-5-2-6b-free` | 65k | text->text | General free chat |
 
 ## Compare & contrast (use cases)
 
@@ -76,9 +78,7 @@ so Prometheus, retries, and fallbacks apply.
 
 | Alias | Upstream |
 |-------|----------|
-| `manager-big-context` | `qwen/qwen3-coder:free` |
 | `manager-audit-claude` | `poolside/laguna-xs-2.1:free` |
-| `manager-understand-audit` | `qwen/qwen3-coder:free` |
 | `manager-openrouter-free` | `openrouter/free` |
 
 ## Refresh

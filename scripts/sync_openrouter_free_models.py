@@ -29,15 +29,14 @@ DEFAULT_MARKDOWN = ROOT / "config" / "clients" / "openrouter-free-models.md"
 
 # Skip non-chat modalities for this coding/audit gateway
 SKIP_ID_SUBSTRINGS = (
+    "stealth/",   # cloaked previews: prompts shared upstream; bill when they exit stealth
     "lyria",
     "clip-preview",
     "content-safety",
 )
 
 CURATED = {
-    "manager-big-context": "qwen/qwen3-coder:free",
     "manager-audit-claude": "poolside/laguna-xs-2.1:free",
-    "manager-understand-audit": "qwen/qwen3-coder:free",
     "manager-openrouter-free": "openrouter/free",
 }
 
@@ -263,7 +262,7 @@ def write_markdown(path: Path, models: list[dict], entries: list[dict], generate
         'export OPENAI_API_KEY="$LITELLM_MASTER_KEY"',
         "# Curated:",
         "#   manager-openrouter-free / tier-free-cloud  → openrouter/free router",
-        "#   manager-big-context / manager-understand-audit → qwen/qwen3-coder:free",
+        "#   manager-big-context / manager-understand-audit → defined in litellm_config.yaml, not here",
         "#   manager-audit-claude → poolside/laguna-xs-2.1:free",
         "# Direct free alias: or-free-<slug>",
         "```",

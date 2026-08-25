@@ -21,6 +21,24 @@ model_list:
       model: ollama_chat/gemma4:12b
       api_base: http://host.docker.internal:11434
 
+  # Cross-host proxy: gbrain's MCP daemon is wired direct to THIS LiteLLM
+  # (:4000, bypasses Headroom — required carve-out, embeddings 404 through
+  # Headroom stack-wide) so it has no way to reach mrgpu's own LiteLLM for
+  # its background chat/reasoning tier. Forwards straight to mrgpu's Ollama
+  # over LAN to honor mrgpu-first routing. 2026-08-23, root cause:
+  # gbrain-gpt-5.6-terra-400-loop. NOTE: this alias was previously added to
+  # litellm_config.mac-worker.yaml, a file no compose service actually
+  # mounts — never live. Re-added here, in the config the running
+  # litellm-proxy container actually loads (docker-compose.yml ./litellm_config.yaml:/app/config.yaml).
+  - model_name: manager-worker-mrgpu-reason
+    litellm_params:
+      model: ollama_chat/gemma4:12b
+      api_base: http://192.168.1.5:11434
+      think: false
+      num_ctx: 32768
+      temperature: 0.2
+      top_p: 0.8
+
   # Terminal PHI fallback target; never participates in cloud fallbacks.
   - model_name: manager-phi-reason-local
     litellm_params:
@@ -101,6 +119,15 @@ model_list:
       model: openai/nomic-embed-text-v2-moe:latest
       api_base: http://host.docker.internal:11434/v1
       api_key: ollama
+
+  # Cross-host proxy, same rationale as manager-worker-mrgpu-reason above:
+  # gbrain's embed calls need mrgpu's own nomic-embed instance, not M4RV's.
+  # Re-added here for the same reason (mac-worker.yaml is never mounted).
+  - model_name: manager-embed-mrgpu
+    litellm_params:
+      model: openai/nomic-embed-text-v2-moe:latest
+      api_base: http://192.168.1.5:11434/v1
+      api_key: local
 
   # ==========================================
   # LM STUDIO / MLX (host Developer Server :1234)
@@ -366,19 +393,14 @@ model_list:
       model: openrouter/nvidia/nemotron-3-ultra-550b-a55b:free
       api_key: os.environ/OPENROUTER_API_KEY
 
-  - model_name: manager-audit-claude
-    litellm_params:
-      model: openrouter/poolside/laguna-xs-2.1:free
-      api_key: os.environ/OPENROUTER_API_KEY
-
+  # manager-audit-claude and manager-openrouter-free are now defined ONLY by
+  # the `include:` below (openrouter_free_models.generated.yaml, refreshed by
+  # scripts/sync_openrouter_free_models.py) — hand-written duplicates removed
+  # 2026-08-25 after reconcile_openrouter_curated.py flagged both registering
+  # twice (simple-shuffle between two deployments of the same alias).
   - model_name: manager-understand-audit
     litellm_params:
       model: openrouter/poolside/laguna-s-2.1:free
-      api_key: os.environ/OPENROUTER_API_KEY
-
-  - model_name: manager-openrouter-free
-    litellm_params:
-      model: openrouter/openrouter/free
       api_key: os.environ/OPENROUTER_API_KEY
 
   # Explicit paid OpenRouter (pin id in OPENROUTER_PAID_MODEL when set; default safe free).
@@ -416,6 +438,16 @@ litellm_settings:
   maximum_spend_logs_retention_period: "90d"
   # Safety net when a model has no explicit fallback chain
   default_fallbacks: [manager-fast-local, manager-gemini-fast, manager-openrouter-free]
+  # Response cache — dedicated litellm-redis (docker-compose.yml), not botmem-redis
+  # (2026-08-23: keeping app-state and LLM-cache redis separate after an AOF
+  # corruption incident on the shared one). ttl 3600s; identical requests within
+  # the window skip the upstream model entirely.
+  cache: True
+  cache_params:
+    type: redis
+    host: litellm-redis
+    port: 6379
+    ttl: 3600
 
 # Guardrails — layered purview with M.A.N.A.G.E.R. (NARC/ETHICS/AIDA).
 # LiteLLM = inference-bus net; agents still own consent/BAA/prepare-only/HITL.
