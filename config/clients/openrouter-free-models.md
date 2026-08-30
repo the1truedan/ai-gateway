@@ -1,6 +1,6 @@
 # OpenRouter free models (via AI-Gateway)
 
-_Auto-generated 2026-08-29T10:00:02.849609+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
+_Auto-generated 2026-08-30T10:00:03.245535+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
 
 Source: [openrouter.ai/models?max_price=0](https://openrouter.ai/models?max_price=0)
 
@@ -25,20 +25,20 @@ so Prometheus, retries, and fallbacks apply.
 
 | OpenRouter id | LiteLLM alias(es) | Ctx | Modality | Role |
 |---------------|-------------------|-----|----------|------|
-| `thinkingmachines/inkling-small:free` | `or-free-thinkingmachines-inkling-small-free` | 1.0M | text+image+audio->text | General free chat |
-| `thinkingmachines/inkling:free` | `or-free-thinkingmachines-inkling-free` | 1.0M | text+image+audio->text | General free chat |
-| `minimax/minimax-m3:free` | `or-free-minimax-minimax-m3-free` | 1.0M | text+image+video->text | General free chat |
-| `nvidia/nemotron-3.5-lightning:free` | `or-free-nvidia-nemotron-3-5-lightning-free` | 1M | text->text | General free chat |
+| `thinkingmachines/inkling-small:free` | `or-free-thinkingmachines-inkling-small-free` | 1.0M | text+image+audio->text | 1M-ctx smaller Inkling (public_code only) |
+| `thinkingmachines/inkling:free` | `or-free-thinkingmachines-inkling-free` | 1.0M | text+image+audio->text | 1M-ctx multimodal (public_code only) |
+| `minimax/minimax-m3:free` | `or-free-minimax-minimax-m3-free` | 1.0M | text+image+video->text | 1M-ctx multimodal |
+| `nvidia/nemotron-3.5-lightning:free` | `or-free-nvidia-nemotron-3-5-lightning-free` | 1M | text->text | 1M-ctx free reasoning / recon overflow |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | `or-free-nvidia-nemotron-3-ultra-550b-a55b-free` | 1M | text->text | Frontier reasoning / orchestration |
 | `dots-studio/dots-3-note-preview:free` | `or-free-dots-studio-dots-3-note-preview-free` | 512k | text+image->text | General free chat |
 | `inclusionai/ling-3.0-flash-fin:free` | `or-free-inclusionai-ling-3-0-flash-fin-free` | 262k | text->text | General free chat |
-| `poolside/laguna-s-2.1:free` | `or-free-poolside-laguna-s-2-1-free` | 262k | text->text | General free chat |
+| `poolside/laguna-s-2.1:free` | `or-free-poolside-laguna-s-2-1-free` | 262k | text->text | Free coding agent (larger Laguna) |
 | `poolside/laguna-xs-2.1:free` | `manager-audit-claude`, `or-free-poolside-laguna-xs-2-1-free` | 262k | text->text | Lighter coding agent (curated audit) |
 | `google/gemma-4-26b-a4b-it:free` | `or-free-google-gemma-4-26b-a4b-it-free` | 262k | text+image+video->text | Free multimodal MoE VLM |
 | `google/gemma-4-31b-it:free` | `or-free-google-gemma-4-31b-it-free` | 262k | text+image+video->text | Free multimodal VLM (image/video→text) |
 | `nvidia/nemotron-3-super-120b-a12b:free` | `or-free-nvidia-nemotron-3-super-120b-a12b-free` | 262k | text->text | Strong general MoE, efficient active params |
 | `cohere/north-mini-code:free` | `or-free-cohere-north-mini-code-free` | 256k | text->text | Agentic coding (North family) |
-| `z-ai/glm-5.2:free` | `or-free-z-ai-glm-5-2-free` | 256k | text->text | General free chat |
+| `z-ai/glm-5.2:free` | `or-free-z-ai-glm-5-2-free` | 256k | text->text | General tools / chat |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | `or-free-nvidia-nemotron-3-nano-omni-30b-a3b-reasoning-free` | 256k | text+image+audio+video->text | Multimodal perception / sub-agent |
 | `openrouter/free` | `manager-openrouter-free`, `or-free-openrouter-free` | 200k | text+image->text | Router: random free model (unpredictable) |
 | `minimax/minimax-m2.7:free` | `or-free-minimax-minimax-m2-7-free` | 196k | text->text | General free chat |
@@ -48,8 +48,8 @@ so Prometheus, retries, and fallbacks apply.
 
 | Job | Prefer | Why | Watch out |
 |-----|--------|-----|-----------|
-| Day-to-day **coding agent** | `poolside/laguna-m.1:free`, `laguna-xs-2.1:free`, `cohere/north-mini-code:free`, `qwen/qwen3-coder:free` | Built for agentic coding / tools | Free queueing; tool quality varies by provider |
-| **Huge codebase audit** / long logs | `qwen/qwen3-coder:free` (1M), `nvidia/nemotron-3-ultra*:free` / `super*:free` (1M) | Million-token context | Latency + free rate limits; still leaves host |
+| Day-to-day **coding agent** | `poolside/laguna-xs-2.1:free`, `laguna-s-2.1:free`, `cohere/north-mini-code:free`, `z-ai/glm-5.2:free` | Built for agentic coding / tools | Free queueing; tool quality varies by provider. `qwen3-coder:free` is **off** the 08-29 list |
+| **Huge codebase audit** / long logs | `thinkingmachines/inkling:free` (1M), `nvidia/nemotron-3.5-lightning:free` / `ultra*:free` (1M) | Million-token context | Latency + free rate limits; still leaves host |
 | **Multimodal** free (image/video→text) | `google/gemma-4-*:free`, `nvidia/nemotron-*-vl*:free`, `nemotron-3-nano-omni*:free` | Free VLM path | **Never PHI**; prefer `manager-vision-local` / Gemini for controlled cloud |
 | Quick free fallback | `openrouter/free` → `manager-openrouter-free` / `tier-free-cloud` | Zero config router | **Random** free model — quality and tools are unpredictable |
 | General chat / summarization | Llama 3.3 70B, Hermes 405B, Qwen3-Next | Broad instruction following | Not specialized for coding agents |
