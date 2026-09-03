@@ -23,6 +23,9 @@ log "running openrouter free-model sync..."
 SYNC_OUT="$(python3 scripts/sync_openrouter_free_models.py)"
 echo "$SYNC_OUT"
 
+log "re-rendering linux/gpu-host merged config (litellm_config.linux.merged.yaml)..."
+python3 scripts/render_linux_litellm_config.py
+
 log "reconciling CURATED map against the fresh catalog..."
 if ! python3 ~/grokcode/scripts/manager-mcp/reconcile_openrouter_curated.py; then
   log "RECONCILE FAILED — CURATED map drift or duplicate registration. Not restarting, not pushing. Needs manual review (see litellm_config.yaml vs openrouter_free_models.generated.yaml)."

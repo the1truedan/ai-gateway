@@ -55,6 +55,15 @@ model_list:
       model: openai/gpt-4o-mini
       api_key: os.environ/OPENAI_API_KEY
 
+# Auto-generated free OpenRouter aliases (or-free-*), refreshed daily by
+# scripts/sync_openrouter_free_models.py. This is the central gateway surface
+# (see header) — the curated free catalog belongs here, not just the single
+# manager-openrouter-free fallback above. Added 2026-09-02: this include was
+# missing, so or-free-* was never reachable through nas-host despite the pull
+# pipeline running daily.
+include:
+  - openrouter_free_models.generated.yaml
+
 litellm_settings:
   callbacks: [prometheus]
   drop_params: true

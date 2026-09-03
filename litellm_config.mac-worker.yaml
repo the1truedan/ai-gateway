@@ -71,6 +71,18 @@ model_list:
       num_ctx: 8192
       temperature: 0.2
       top_p: 0.8
+
+  - model_name: manager-test-m4-qwen38-mlx
+    # LM Studio Developer Server on the desk host. Exclusive Metal only
+    # (24GB unified OOMs at default 8192). Do not load beside Docker/browser.
+    # Compose already sets LMSTUDIO_API_BASE → host :1234.
+    litellm_params:
+      model: openai/orcarouter/Qwen3.8-27B-Uncensored-MLX
+      api_base: os.environ/LMSTUDIO_API_BASE
+      api_key: os.environ/LM_API_TOKEN
+      num_ctx: 4096
+      temperature: 0.2
+      top_p: 0.8
   # ---- end manager-test-m4-* -----------------------------------------------
 
   - model_name: manager-embed
@@ -110,6 +122,14 @@ model_list:
       model: openai/nomic-embed-text-v2-moe:latest
       api_base: http://192.168.1.5:11434/v1
       api_key: local
+
+# Auto-generated free OpenRouter aliases (or-free-*) — added 2026-09-02 as
+# fallback parity, NOT a replacement for the "keep slim" worker-bus design
+# above. Normal free-cloud traffic still routes to nas-host; this gives the
+# Mac's own litellm-proxy the full curated list too so manager-openrouter-free
+# callers aren't limited to the random-router fallback when nas-host is down.
+include:
+  - openrouter_free_models.generated.yaml
 
 litellm_settings:
   drop_params: true
