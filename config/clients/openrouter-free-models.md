@@ -1,6 +1,6 @@
 # OpenRouter free models (via AI-Gateway)
 
-_Auto-generated 2026-09-07T10:00:06.929605+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
+_Auto-generated 2026-09-08T10:00:06.867443+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
 
 Source: [openrouter.ai/models?max_price=0](https://openrouter.ai/models?max_price=0)
 
@@ -21,13 +21,12 @@ so Prometheus, retries, and fallbacks apply.
 
 ## Catalog
 
-**18** free chat-candidate models → **20** LiteLLM aliases (includes curated names).
+**16** free chat-candidate models → **18** LiteLLM aliases (includes curated names).
 
 | OpenRouter id | LiteLLM alias(es) | Ctx | Modality | Role |
 |---------------|-------------------|-----|----------|------|
 | `thinkingmachines/inkling-small:free` | `or-free-thinkingmachines-inkling-small-free` | 1.0M | text+image+audio->text | 1M-ctx smaller Inkling (public_code only) |
 | `thinkingmachines/inkling:free` | `or-free-thinkingmachines-inkling-free` | 1.0M | text+image+audio->text | 1M-ctx multimodal (public_code only) |
-| `minimax/minimax-m3:free` | `or-free-minimax-minimax-m3-free` | 1.0M | text+image+video->text | 1M-ctx multimodal |
 | `nvidia/nemotron-3.5-lightning:free` | `or-free-nvidia-nemotron-3-5-lightning-free` | 1M | text->text | 1M-ctx free reasoning / recon overflow |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | `or-free-nvidia-nemotron-3-ultra-550b-a55b-free` | 1M | text->text | Frontier reasoning / orchestration |
 | `dots-studio/dots-3-note-preview:free` | `or-free-dots-studio-dots-3-note-preview-free` | 512k | text+image->text | General free chat |
@@ -41,7 +40,6 @@ so Prometheus, retries, and fallbacks apply.
 | `cohere/north-mini-code:free` | `or-free-cohere-north-mini-code-free` | 256k | text->text | Agentic coding (North family) |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | `or-free-nvidia-nemotron-3-nano-omni-30b-a3b-reasoning-free` | 256k | text+image+audio+video->text | Multimodal perception / sub-agent |
 | `openrouter/free` | `manager-openrouter-free`, `or-free-openrouter-free` | 200k | text+image->text | Router: random free model (unpredictable) |
-| `minimax/minimax-m2.7:free` | `or-free-minimax-minimax-m2-7-free` | 196k | text->text | General free chat |
 | `liquid/lfm-2.5-2.6b:free` | `or-free-liquid-lfm-2-5-2-6b-free` | 65k | text->text | General free chat |
 
 ## Compare & contrast (use cases)
