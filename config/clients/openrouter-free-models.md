@@ -1,6 +1,6 @@
 # OpenRouter free models (via AI-Gateway)
 
-_Auto-generated 2026-09-15T10:00:04.178344+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
+_Auto-generated 2026-09-16T10:00:03.169580+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
 
 Source: [openrouter.ai/models?max_price=0](https://openrouter.ai/models?max_price=0)
 
@@ -21,7 +21,7 @@ so Prometheus, retries, and fallbacks apply.
 
 ## Catalog
 
-**19** free chat-candidate models → **21** LiteLLM aliases (includes curated names).
+**20** free chat-candidate models → **22** LiteLLM aliases (includes curated names).
 
 | OpenRouter id | LiteLLM alias(es) | Ctx | Modality | Role |
 |---------------|-------------------|-----|----------|------|
@@ -44,6 +44,7 @@ so Prometheus, retries, and fallbacks apply.
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | `or-free-nvidia-nemotron-3-nano-omni-30b-a3b-reasoning-free` | 256k | text+image+audio+video->text | Multimodal perception / sub-agent |
 | `openrouter/free` | `manager-openrouter-free`, `or-free-openrouter-free` | 200k | text+image->text | Router: random free model (unpredictable) |
 | `liquid/lfm-2.5-2.6b:free` | `or-free-liquid-lfm-2-5-2-6b-free` | 65k | text->text | General free chat |
+| `z-ai/glm-5.2:free` | `or-free-z-ai-glm-5-2-free` | 32k | text->text | General tools / chat |
 
 ## Compare & contrast (use cases)
 
