@@ -1,6 +1,6 @@
 # OpenRouter free models (via AI-Gateway)
 
-_Auto-generated 2026-09-17T10:00:04.546939+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
+_Auto-generated 2026-09-18T10:00:05.992128+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
 
 Source: [openrouter.ai/models?max_price=0](https://openrouter.ai/models?max_price=0)
 
@@ -21,10 +21,11 @@ so Prometheus, retries, and fallbacks apply.
 
 ## Catalog
 
-**20** free chat-candidate models → **22** LiteLLM aliases (includes curated names).
+**22** free chat-candidate models → **24** LiteLLM aliases (includes curated names).
 
 | OpenRouter id | LiteLLM alias(es) | Ctx | Modality | Role |
 |---------------|-------------------|-----|----------|------|
+| `deepseek/deepseek-v4-flash-0731:free` | `or-free-deepseek-deepseek-v4-flash-0731-free` | 1.0M | text->text | General free chat |
 | `thinkingmachines/inkling-small:free` | `or-free-thinkingmachines-inkling-small-free` | 1.0M | text+image+audio->text | 1M-ctx smaller Inkling (public_code only) |
 | `thinkingmachines/inkling:free` | `or-free-thinkingmachines-inkling-free` | 1.0M | text+image+audio->text | 1M-ctx multimodal (public_code only) |
 | `nvidia/nemotron-3.5-lightning:free` | `or-free-nvidia-nemotron-3-5-lightning-free` | 1M | text->text | 1M-ctx free reasoning / recon overflow |
@@ -35,6 +36,7 @@ so Prometheus, retries, and fallbacks apply.
 | `nex-agi/nex-n2.5-pro:free` | `or-free-nex-agi-nex-n2-5-pro-free` | 262k | text+image->text | General free chat |
 | `inclusionai/ling-3.0-flash-sante:free` | `or-free-inclusionai-ling-3-0-flash-sante-free` | 262k | text->text | General free chat |
 | `inclusionai/ling-3.0-flash-fin:free` | `or-free-inclusionai-ling-3-0-flash-fin-free` | 262k | text->text | General free chat |
+| `qwen/qwen3.8-27b:free` | `or-free-qwen-qwen3-8-27b-free` | 262k | text+image+video->text | General free chat |
 | `poolside/laguna-s-2.1:free` | `or-free-poolside-laguna-s-2-1-free` | 262k | text->text | Free coding agent (larger Laguna) |
 | `poolside/laguna-xs-2.1:free` | `manager-audit-claude`, `or-free-poolside-laguna-xs-2-1-free` | 262k | text->text | Lighter coding agent (curated audit) |
 | `google/gemma-4-26b-a4b-it:free` | `or-free-google-gemma-4-26b-a4b-it-free` | 262k | text+image+video->text | Free multimodal MoE VLM |
