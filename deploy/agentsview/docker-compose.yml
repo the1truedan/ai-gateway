@@ -77,6 +77,33 @@ services:
       manager.stack: orchestration
       manager.role: session-index
 
+  # Read-only MCP (StreamableHTTP) over the same PG archive, for Open WebUI /
+  # any MCP client. Same image, config.toml and auth_token as `agentsview`;
+  # the non-loopback bind makes AgentsView enforce `Authorization: Bearer`.
+  # Recreate alone: `docker compose ... up -d --no-deps agentsview-mcp`.
+  # Never `--remove-orphans`: this project name is shared with other stacks.
+  agentsview-mcp:
+    image: manager-agentsview:local
+    container_name: tower-agentsview-mcp
+    restart: unless-stopped
+    command: ["agentsview", "mcp", "--pg", "--http", "0.0.0.0:42101", "--http-allow-insecure"]
+    env_file: ${AGENTSVIEW_ENV_FILE:-.env}
+    environment:
+      AGENTSVIEW_PG_URL: postgresql://agentsview:${AGENTSVIEW_DB_PASSWORD}@agentsview-db:5432/agentsview
+      AGENTSVIEW_PG_SCHEMA: agentsview
+      AGENTSVIEW_DATA_DIR: /data
+    volumes:
+      - /mnt/user/appdata/manager-orchestration/agentsview-data:/data
+    ports:
+      - "42101:42101"
+    depends_on:
+      agentsview-db:
+        condition: service_healthy
+    networks: [manager-orchestration]
+    labels:
+      manager.stack: orchestration
+      manager.role: session-index-mcp
+
 networks:
   manager-orchestration:
     name: manager-orchestration
