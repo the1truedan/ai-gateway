@@ -23,8 +23,17 @@ model_list:
     litellm_params: *reason
   - model_name: manager-worker-mrgpu-vision
     litellm_params: {model: ollama_chat/qwen3-vl:8b, api_base: os.environ/OLLAMA_API_BASE}
+  # Sensitive-data worker split from *code 2026-09-22: 128k ctx for full-context
+  # History Analyst answers in OWUI. qwen3.5:9b @131072 = 10.2GB, fully in 16GB VRAM.
   - model_name: manager-worker-mrgpu-phi
-    litellm_params: *code
+    litellm_params:
+      model: ollama_chat/qwen3.5:9b
+      api_base: os.environ/OLLAMA_API_BASE
+      think: false
+      num_ctx: 131072
+      temperature: 0.2
+      top_p: 0.8
+      presence_penalty: 0
   - model_name: manager-embed
     litellm_params: {model: openai/nomic-embed-text-v2-moe:latest, api_base: os.environ/OLLAMA_OPENAI_API_BASE, api_key: local}
   # deepseek-r1:14b already pulled (9.0GB) — fits comfortably. THINKING model:
