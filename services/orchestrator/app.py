@@ -35,8 +35,18 @@ LOCAL_MODELS = frozenset(
         "manager-vision",
         "manager-embed",
         "manager-phi-local",
+        "manager-test-qwen38-27b-exclusive",
     }
 )
+EXCLUSIVE_GPU_MODELS = frozenset({"manager-test-qwen38-27b-exclusive"})
+
+
+def _exclusive_gpu_host() -> str | None:
+    """Checkout fixtures use gpu-host; live routes.json uses mrgpu."""
+    for key in ("gpu-host", "mrgpu"):
+        if key in HOSTS:
+            return key
+    return None
 FREE_CLOUD_MODELS = frozenset({"manager-openrouter-free"})
 PAID_CLOUD_MODELS = frozenset(
     {
@@ -58,7 +68,8 @@ EXPERIMENTAL_CLOUD_MODELS = frozenset(
 DEFAULT_MODELS = (
     "manager-auto", "manager-plan", "manager-code", "manager-review",
     "manager-reason", "manager-research", "manager-vision", "manager-embed",
-    "manager-phi-local", "manager-openrouter-free", "manager-codex-paid",
+    "manager-phi-local", "manager-test-qwen38-27b-exclusive",
+    "manager-openrouter-free", "manager-codex-paid",
     "manager-claude-paid", "manager-gemini-paid", "manager-grok-paid",
     "manager-mimo-paid", "manager-hf-paid", "manager-darkbloom-experimental",
     "manager-akashml-experimental", "manager-salad-experimental",
@@ -364,6 +375,17 @@ def decide(payload: dict[str, Any], headers: Any) -> Decision:
         )
 
     if requested != AUTO_MODEL:
+        if requested in EXCLUSIVE_GPU_MODELS:
+            host = _exclusive_gpu_host()
+            if host is None:
+                raise RuntimeError("cloud_consent_required")
+            return Decision(
+                selected_host=host,
+                selected_model=requested,
+                tier="local-exclusive",
+                reason="explicit exclusive Qwen3.8 27B alias pins gpu-host; never manager-code",
+                cloud_allowed=False,
+            )
         if requested in FREE_CLOUD_MODELS:
             return Decision(
                 selected_host=FREE_CLOUD_HOST,

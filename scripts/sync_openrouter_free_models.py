@@ -42,26 +42,22 @@ CURATED = {
 
 # One-line roles for the human guide (id → use)
 ROLE_HINTS = {
-    "qwen/qwen3-coder:free": "Best free coding + huge context audits",
+    # qwen/qwen3-coder:free left the 2026-08-29 live free set — do not recommend until it returns
     "nvidia/nemotron-3-ultra-550b-a55b:free": "Frontier reasoning / orchestration",
     "nvidia/nemotron-3-super-120b-a12b:free": "Strong general MoE, efficient active params",
-    "poolside/laguna-m.1:free": "Flagship free coding agent",
+    "nvidia/nemotron-3.5-lightning:free": "1M-ctx free reasoning / recon overflow",
+    "poolside/laguna-s-2.1:free": "Free coding agent (larger Laguna)",
     "poolside/laguna-xs-2.1:free": "Lighter coding agent (curated audit)",
     "cohere/north-mini-code:free": "Agentic coding (North family)",
-    "qwen/qwen3-next-80b-a3b-instruct:free": "Fast instruct chat",
+    "z-ai/glm-5.2:free": "General tools / chat",
+    "thinkingmachines/inkling:free": "1M-ctx multimodal (public_code only)",
+    "thinkingmachines/inkling-small:free": "1M-ctx smaller Inkling (public_code only)",
     "google/gemma-4-31b-it:free": "Free multimodal VLM (image/video→text)",
     "google/gemma-4-26b-a4b-it:free": "Free multimodal MoE VLM",
     "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free": "Multimodal perception / sub-agent",
-    "nvidia/nemotron-3-nano-30b-a3b:free": "Efficient small MoE for agents",
     "openrouter/free": "Router: random free model (unpredictable)",
-    "openai/gpt-oss-20b:free": "Small OSS baseline",
-    "meta-llama/llama-3.3-70b-instruct:free": "General chat 70B",
-    "meta-llama/llama-3.2-3b-instruct:free": "Tiny general chat",
-    "nousresearch/hermes-3-llama-3.1-405b:free": "Large generalist / agentic",
-    "nvidia/nemotron-nano-12b-v2-vl:free": "Video/image VL reasoning",
-    "nvidia/nemotron-nano-9b-v2:free": "Tiny efficient LLM",
-    "tencent/hy3:free": "Large MoE reasoning (Tencent)",
-    "cognitivecomputations/dolphin-mistral-24b-venice-edition:free": "Uncensored; avoid PHI",
+    "minimax/minimax-m3:free": "1M-ctx multimodal",
+    "minimax/minimax-m2.7:free": "General free chat",
 }
 
 
@@ -296,11 +292,11 @@ def write_markdown(path: Path, models: list[dict], entries: list[dict], generate
             "",
             "| Job | Prefer | Why | Watch out |",
             "|-----|--------|-----|-----------|",
-            "| Day-to-day **coding agent** | `poolside/laguna-m.1:free`, `laguna-xs-2.1:free`, "
-            "`cohere/north-mini-code:free`, `qwen/qwen3-coder:free` | Built for agentic coding / tools | "
-            "Free queueing; tool quality varies by provider |",
-            "| **Huge codebase audit** / long logs | `qwen/qwen3-coder:free` (1M), "
-            "`nvidia/nemotron-3-ultra*:free` / `super*:free` (1M) | Million-token context | "
+            "| Day-to-day **coding agent** | `poolside/laguna-xs-2.1:free`, `laguna-s-2.1:free`, "
+            "`cohere/north-mini-code:free`, `z-ai/glm-5.2:free` | Built for agentic coding / tools | "
+            "Free queueing; tool quality varies by provider. `qwen3-coder:free` is **off** the 08-29 list |",
+            "| **Huge codebase audit** / long logs | `thinkingmachines/inkling:free` (1M), "
+            "`nvidia/nemotron-3.5-lightning:free` / `ultra*:free` (1M) | Million-token context | "
             "Latency + free rate limits; still leaves host |",
             "| **Multimodal** free (image/video→text) | `google/gemma-4-*:free`, "
             "`nvidia/nemotron-*-vl*:free`, `nemotron-3-nano-omni*:free` | Free VLM path | "

@@ -42,10 +42,10 @@ Promote path: FluxDown → `_dl` → `scripts/fluxdown_promote_to_models.py` (Jo
 | Case | Evidence | Class |
 |------|----------|-------|
 | **Qwen Image Edit 2509 KSampler** | mok-tua `docs/operations/MODEL_PULL_RECHECK_VIDEO_ROBUST_2026-08-06.md` · `docs/assets/capabilities/manager-pivot/PROVENANCE.json` · HANDOFF · motion `M7` · SESSION_HANDOFF 0.5.10 | **`model_settings`** — fp8 edit + VL TE (+ LoRAs) peak exceeds 16 GB even with Comfy `--lowvram`, 256–768². **This is the main historical OOM stamp from mok-tua tests.** |
-| **MiniMax H3 low-MP KSampler (2026-08-07)** | mok-tua pin `workflows/minimax_h3_t2v_low_mp.api.json` · stamp `grokcode/data/catalog/mok_tua_h3_low_mp_smoke_2026-08-07.json` | **`model_settings`** — **clean gate 540 MiB**, zero forbidden PIDs; loaders+cond OK; **OOM at KSampler** peak **~15913 MiB** (480² · 22f · 8 steps). Proves H3 footprint under exclusive gate, not multi-tool. |
+| **MiniMax H3 low-MP KSampler (2026-08-07)** | mok-tua pin `workflows/minimax_h3_t2v_low_mp.api.json` · stamp `grokcode/data/catalog/mok_tua_h3_low_mp_smoke_2026-08-07.json` | **`model_settings`** — **clean gate 540 MiB**, zero forbidden PIDs; loaders+cond OK; **OOM at KSampler** peak **~15913 MiB** (480² · 22f · 8 steps). Proves H3 footprint under exclusive gate, not multi-tool. **RESOLVED 2026-08-13** — see below. |
 
 **Law:** do **not** hammer Qwen Edit full sampling on mrgpu until a proven lower-VRAM pack or larger GPU.  
-**H3:** next try `--lowvram` exclusive Comfy restart + CPU TE / tinier canvas; do not reclassify as multi-tool.
+**H3 — RESOLVED 2026-08-13.** `--lowvram` alone fixed the original text-encoder OOM but surfaced a separate upstream `SamplerCustomAdvanced` NestedTensor bug (fixed by ComfyUI PR #15243, landed v0.31.0 — but that needs `comfy-kitchen>=0.2.28`, which needs `torch>=2.8`/cu130, incompatible with this lab's torch-2.6-pinned main install). Fixed via a fully isolated second ComfyUI v0.31.0 + torch 2.9+/cu130 env on mrgpu `:8189`, zero risk to the main `:8188` torch-2.6 install. Verified 704×384/124-frame/20-step real synced h264+aac output, ~15 GB peak VRAM, 12m14s. Full runbook: `grokcode/docs/operations/H3_ISOLATED_TORCH28_ENV_RUNBOOK_2026-08-13.md`.
 
 ### Not OOM — version / nodes / pins / inventory (mostly mok-tua motion matrix)
 

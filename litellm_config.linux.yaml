@@ -80,6 +80,18 @@ model_list:
     litellm_params:
       model: ollama_chat/initium/law_model
       api_base: os.environ/OLLAMA_API_BASE
+  - model_name: manager-test-qwen38-27b-exclusive
+    # Local Ollama CUDA twin. Tag is :iq4_xs (not :iqx_xs). Fits exclusive
+    # 512-ctx on the 4060 Ti (~15250/16380 MiB). Never a daily pin.
+    # Never manager-code. steam-prep then ollama stop around each call.
+    # api.orcarouter.ai is a cloud router — do not use it here.
+    litellm_params:
+      model: ollama_chat/orcarouter/Qwen3.8-27B-Uncensored:iq4_xs
+      api_base: os.environ/OLLAMA_API_BASE
+      think: false
+      num_ctx: 512
+      temperature: 0.2
+      top_p: 0.8
   # ---- end manager-test-* ------------------------------------------------
 litellm_settings:
   callbacks: [prometheus]
@@ -94,6 +106,7 @@ router_settings:
     - manager-test-qwen3-coder-30b: []
     - manager-test-embed-bge-m3: []
     - manager-test-law-model: []
+    - manager-test-qwen38-27b-exclusive: []
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   database_url: os.environ/DATABASE_URL

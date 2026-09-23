@@ -1,6 +1,6 @@
 {
   "host_model_map": {
-    "gpu-host": {"manager-code": "manager-worker-gpu-host-code", "manager-reason": "manager-worker-gpu-host-reason"},
+    "gpu-host": {"manager-code": "manager-worker-gpu-host-code", "manager-reason": "manager-worker-gpu-host-reason", "manager-test-qwen38-27b-exclusive": "manager-test-qwen38-27b-exclusive"},
     "mac-client": {"manager-code": "manager-worker-m4-code", "manager-reason": "manager-worker-m4-reason"},
     "nas-host": {"manager-code": "manager-worker-nas-host-code", "manager-vision": "manager-worker-nas-host-vision"}
   },

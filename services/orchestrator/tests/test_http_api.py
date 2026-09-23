@@ -146,6 +146,30 @@ class OrchestratorHTTPTest(unittest.TestCase):
         self.assertEqual(payload["selected_model"], "manager-code")
         self.assertEqual(payload["tier"], "local")
 
+    def test_qwen38_exclusive_alias_pins_gpu_host(self) -> None:
+        status, payload = self.decision(
+            "Implement a tool-calling agent on MLX",
+            model="manager-test-qwen38-27b-exclusive",
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["selected_host"], "gpu-host")
+        self.assertEqual(payload["selected_model"], "manager-test-qwen38-27b-exclusive")
+        self.assertEqual(payload["tier"], "local-exclusive")
+        self.assertNotEqual(payload["selected_model"], "manager-code")
+
+    def test_qwen38_exclusive_alias_still_yields_phi_on_sensitive(self) -> None:
+        status, payload = self.decision(
+            "Summarize this patient medical record for the caregiver",
+            model="manager-test-qwen38-27b-exclusive",
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["selected_model"], "manager-phi-local")
+
+    def test_unknown_model_stays_404(self) -> None:
+        status, payload = self.decision("hello", model="qwen3.8-uncensored")
+        self.assertEqual(status, 404)
+        self.assertEqual(payload["error"]["code"], "unknown_model")
+
     def test_explicit_nvidia_tier_pins_gpu_host_without_prompt_hint(self) -> None:
         status, payload = self.decision("Explain this code", model="manager-code")
         self.assertEqual(status, 200)

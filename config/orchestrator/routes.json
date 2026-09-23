@@ -7,7 +7,8 @@
       "manager-research": "manager-worker-gpu-host-research",
       "manager-review": "manager-worker-gpu-host-review",
       "manager-vision": "manager-worker-gpu-host-vision",
-      "manager-phi-local": "manager-worker-gpu-host-phi"
+      "manager-phi-local": "manager-worker-gpu-host-phi",
+      "manager-test-qwen38-27b-exclusive": "manager-test-qwen38-27b-exclusive"
     },
     "mac-client": {
       "manager-code": "manager-worker-m4-code",
