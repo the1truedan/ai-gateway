@@ -192,7 +192,7 @@ model_list:
 
   - model_name: tier-paid-cloud
     litellm_params:
-      model: xai/grok-code-fast-1
+      model: xai/grok-4.7
       api_key: os.environ/XAI_API_KEY
 
   # Explicit paid aliases. Selecting one is the approval signal.
@@ -225,12 +225,12 @@ model_list:
   # Real Anthropic via LiteLLM (not local claude-* aliases which map to Ollama).
   - model_name: manager-claude-paid
     litellm_params:
-      model: anthropic/claude-sonnet-4-6
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: manager-claude-opus-paid
     litellm_params:
-      model: anthropic/claude-opus-4-7
+      model: anthropic/claude-opus-5-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: manager-claude-haiku-paid
@@ -411,11 +411,11 @@ model_list:
       api_key: os.environ/OPENROUTER_API_KEY
 
   # ==========================================
-  # DIRECT xAI (Grok Code Fast 1)
+  # DIRECT xAI (grok-4.7; grok-code-fast-1 retired, verified /v1/models 2026-09-22)
   # ==========================================
   - model_name: manager-grok-coding
     litellm_params:
-      model: xai/grok-code-fast-1
+      model: xai/grok-4.7
       api_key: os.environ/XAI_API_KEY
 
 # Auto-generated free OpenRouter aliases (or-free-*)

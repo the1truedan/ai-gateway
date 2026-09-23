@@ -29,7 +29,7 @@ PAID_STUBS = [
     {
         "model_name": "manager-grok-paid",
         "litellm_params": {
-            "model": "xai/grok-3-mini",
+            "model": "xai/grok-4.20-0309-non-reasoning",
             "api_key": "os.environ/XAI_API_KEY",
         },
     },
@@ -50,14 +50,28 @@ PAID_STUBS = [
     {
         "model_name": "manager-claude-paid",
         "litellm_params": {
-            "model": "anthropic/claude-3-5-haiku-20241022",
+            "model": "anthropic/claude-sonnet-5",
+            "api_key": "os.environ/ANTHROPIC_API_KEY",
+        },
+    },
+    {
+        "model_name": "manager-claude-opus-paid",
+        "litellm_params": {
+            "model": "anthropic/claude-opus-5-5",
+            "api_key": "os.environ/ANTHROPIC_API_KEY",
+        },
+    },
+    {
+        "model_name": "manager-claude-haiku-paid",
+        "litellm_params": {
+            "model": "anthropic/claude-haiku-4-5-20251001",
             "api_key": "os.environ/ANTHROPIC_API_KEY",
         },
     },
     {
         "model_name": "manager-codex-paid",
         "litellm_params": {
-            "model": "openai/gpt-4o-mini",
+            "model": "openai/gpt-5.6-terra",
             "api_key": "os.environ/OPENAI_API_KEY",
         },
     },

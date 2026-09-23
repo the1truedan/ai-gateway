@@ -48,11 +48,11 @@ model_list:
   # populated on nas-host — only the api_key indirection is allowed to be blank.
   - model_name: manager-claude-paid
     litellm_params:
-      model: anthropic/claude-3-5-haiku-20241022
+      model: anthropic/claude-sonnet-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: manager-codex-paid
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/gpt-5.6-terra
       api_key: os.environ/OPENAI_API_KEY
 
 # Auto-generated free OpenRouter aliases (or-free-*), refreshed daily by
