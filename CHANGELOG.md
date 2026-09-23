@@ -7,6 +7,40 @@ Commits before this file existed predate versioning and aren't individually
 back-filled here — `git log` is authoritative for that history. This starts
 the tracked record going forward.
 
+## [0.3.0] — 2026-09-23
+
+### Breakthrough: History Analyst
+
+- **One Open WebUI preset that answers questions across every past agent session.**
+  Claude Code, Codex, Grok, ChatGPT and shell history, cited by session ID. Other memory
+  layers see one agent or one repo. This one reads the whole archive through a read-only
+  [AgentsView](https://github.com/kenn-io/agentsview) MCP server, plus
+  [Hister](https://github.com/asciimoo/hister) for browser/shell history, inside
+  [Open WebUI](https://github.com/open-webui/open-webui). It answers on a local model through
+  [Headroom](https://github.com/chopratejas/headroom) → [LiteLLM](https://github.com/BerriAI/litellm)
+  → [Ollama](https://github.com/ollama/ollama). Setup and the gotchas we hit:
+  [`docs/HISTORY_ANALYST.md`](docs/HISTORY_ANALYST.md).
+
+### Added
+
+- `deploy/agentsview/docker-compose.yml`: `agentsview-mcp` sidecar (StreamableHTTP `:42101`,
+  bearer auth, same Postgres archive as AgentsView).
+- `scripts/history/owui_knowledge.py`: push markdown digests into Open WebUI Knowledge and attach
+  them to a preset, optionally in full-context mode.
+
+### Changed
+
+- Open WebUI retrieval: [bge-m3](https://huggingface.co/BAAI/bge-m3) embeddings on Ollama with
+  hybrid (BM25 + vector) search, replacing the built-in MiniLM default.
+- Local sensitive-data worker split from the shared coding alias and raised to a 128k context
+  (qwen3.5:9b, fits 16 GB VRAM), so full-context history answers no longer truncate.
+- Retired upstream model IDs replaced (Claude, xAI Grok, OpenAI paid stubs).
+
+### Fixed
+
+- Orchestrator route drift: per-host routes now point at each host's own LiteLLM instead of
+  looping back through the gateway.
+
 ## [0.2.4] — 2026-08-16
 
 ### Added
