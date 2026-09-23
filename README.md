@@ -1,6 +1,6 @@
 # ai-gateway
 
-[![Version](https://img.shields.io/badge/version-0.2.4-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](CHANGELOG.md)
 [![Pages](https://img.shields.io/badge/pages-ai--gateway-6ee7ff.svg)](https://the1truedan.github.io/ai-gateway/)
 
 One front door for the models and tools in a home AI lab — chat UIs, coding
@@ -10,8 +10,12 @@ API bases and five different failure modes.
 This repo is **glue and ops**, not a from-scratch model runtime. The value is
 wiring known open-source pieces so they behave as one stack.
 
-**Current release:** [`v0.2.4`](CHANGELOG.md) — Pages one-pager adds AgentsView
-and the rest of the door-adjacent stack. Site: [the1truedan.github.io/ai-gateway](https://the1truedan.github.io/ai-gateway/).
+**Current release:** [`v0.3.0` — History Analyst](https://github.com/the1truedan/ai-gateway/releases/tag/v0.3.0)
+(breakthrough). One Open WebUI preset answers questions across **every** past agent session
+(Claude Code, Codex, Grok, ChatGPT, shell and browser history) and cites the session IDs, on a
+local model with local bge-m3 embeddings and hybrid search. Setup:
+[docs/HISTORY_ANALYST.md](docs/HISTORY_ANALYST.md). Site:
+[the1truedan.github.io/ai-gateway](https://the1truedan.github.io/ai-gateway/).
 See [CHANGELOG.md](CHANGELOG.md) for dated detail.
 
 ## Stack map (what is actually in play — as of v0.2.0)
@@ -254,7 +258,7 @@ Lab launchers that sit *beside* those CLIs:
 | **[botmem](https://github.com/botmem/botmem)** | Personal / life memory SoR (compose profile `memory`) | [botmem/botmem](https://github.com/botmem/botmem) · images `ghcr.io/botmem/botmem` |
 | **[hippo-memory](https://github.com/kitfunso/hippo-memory)** | Agent/coding memory under `.hippo/` per repo (host MCP, not the same as botmem) | [kitfunso/hippo-memory](https://github.com/kitfunso/hippo-memory) · npm `hippo-memory` |
 | **[PMB](https://github.com/pmb-ai/pmb)** | Per-project semantic memory: code/doc indexing + local embedding + recall | [pmb-ai/pmb](https://github.com/pmb-ai/pmb) |
-| **[AgentsView](https://github.com/kenn-io/agentsview)** | Local-first session search, analytics, and token-use stats across 20+ coding agents (Claude Code, Codex, and more) | [kenn-io/agentsview](https://github.com/kenn-io/agentsview) (not internal) |
+| **[AgentsView](https://github.com/kenn-io/agentsview)** | Local-first session search, analytics, and token-use stats across 20+ coding agents (Claude Code, Codex, and more). Its read-only MCP sidecar feeds the [History Analyst](docs/HISTORY_ANALYST.md) preset | [kenn-io/agentsview](https://github.com/kenn-io/agentsview) (not internal) |
 | **[gbrain](https://github.com/garrytan/gbrain)** | Persistent, git-backed knowledge brain for agent workflows — pages/entities/timeline over a PGLite-backed store with hybrid semantic search, exposed via MCP (`put_page` / `get_page` / `query` / `recall` / …); hooks auto-inject relevant context into every session | [garrytan/gbrain](https://github.com/garrytan/gbrain) (not internal) |
 | **[Turnstone](https://github.com/turnstonelabs/turnstone)** | Optional agent/orchestration client path through Headroom | [turnstonelabs/turnstone](https://github.com/turnstonelabs/turnstone) |
 | **AIDA / vision-embed / prompt-io** | Lab services in `services/` (document helpers, embeddings, metrics) | This repo (sanitized) |
