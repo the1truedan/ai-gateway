@@ -118,6 +118,23 @@
   .cap-tile h3 { margin: 0 0 0.35rem; font-size: 1rem; }
   .cap-tile p { margin: 0; font-size: 0.88rem; color: var(--fg-dim); }
 
+  .feature { border-bottom: 1px solid var(--line); background: linear-gradient(180deg, rgba(110,231,255,0.05), transparent 60%); }
+  .feature .section-eyebrow { color: var(--accent-mu); }
+  .missing { max-width: 62ch; margin: 0 auto 2.4rem; text-align: center; color: var(--fg-dim); }
+  .missing strong { color: var(--fg); }
+  .flow {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.78rem; color: var(--accent-soft); text-align: center;
+    margin: 0 auto 2.2rem; line-height: 1.9; overflow-wrap: anywhere;
+  }
+  .flow b { color: var(--fg); font-weight: 600; }
+  .next { max-width: 62ch; margin: 2.6rem auto 0; }
+  .next h3 { margin: 0 0 0.8rem; font-size: 1rem; text-align: center; }
+  .next ul { margin: 0; padding-left: 1.2rem; color: var(--fg-dim); font-size: 0.92rem; }
+  .next li { margin: 0 0 0.45rem; }
+  .next li strong { color: var(--fg); font-weight: 600; }
+  .feature-cta { display: flex; justify-content: center; gap: 0.9rem; flex-wrap: wrap; margin-top: 2.4rem; }
+
   footer { border-top: 1px solid var(--line); padding: 2.4rem 1.5rem 3rem; }
   .footer-inner {
     max-width: 980px; margin: 0 auto; display: flex;
@@ -155,11 +172,55 @@
     <p class="tagline">One front door for a home AI lab. Chat UIs and coding agents aim here instead of five API bases and five failure modes.</p>
     <div class="hero-cta">
       <a class="btn primary" href="https://github.com/the1truedan/ai-gateway">View on GitHub</a>
-      <a class="btn" href="https://github.com/the1truedan/ai-gateway/releases/tag/v0.2.4">v0.2.4</a>
+      <a class="btn" href="https://github.com/the1truedan/ai-gateway/releases/tag/v0.3.0">v0.3.0 · History Analyst</a>
       <a class="btn" href="https://the1truedan.github.io/fast-models/">fast-models</a>
-      <span class="version-chip">v<b>0.2.4</b> · MIT · public</span>
+      <span class="version-chip">v<b>0.3.0</b> · MIT · public</span>
     </div>
   </div>
+</div>
+
+<div class="feature">
+<section class="band">
+  <div class="section-head">
+    <p class="section-eyebrow">v0.3.0 · breakthrough</p>
+    <h2 class="section-title">Ask about every session you have ever run. Answered locally, with receipts.</h2>
+    <p class="section-sub">History Analyst: one Open WebUI preset over the whole agent session archive. Claude Code, Codex, Grok, ChatGPT, shell and browser history, cited by session ID.</p>
+  </div>
+  <p class="missing">Every memory layer before this saw <strong>one agent or one repo</strong>. The missing piece was a single place that reads <strong>all</strong> of it, searches it by meaning and by exact name or date, cites the session it came from, and <strong>never leaves the house</strong>.</p>
+  <p class="flow"><b>Open WebUI</b> preset → <b>AgentsView MCP</b> (every session) + <b>Hister MCP</b> (browser/shell) → <b>Headroom</b> → <b>LiteLLM</b> → local model on <b>Ollama</b> · knowledge embedded with <b>bge-m3</b>, hybrid BM25 + vector</p>
+  <div class="cap-grid">
+    <div class="cap-tile">
+      <h3>All session history, one index</h3>
+      <p>AgentsView already archives every CLI agent into Postgres. A read-only MCP sidecar lets the chat model list, search and open sessions itself. Titles and IDs first, small message pages second, never a bulk transcript dump.</p>
+    </div>
+    <div class="cap-tile">
+      <h3>Local embeddings, context search</h3>
+      <p>Knowledge collections are embedded with bge-m3 on local Ollama, and search is hybrid: vectors find meaning, BM25 finds the exact name, number or date that vectors miss.</p>
+    </div>
+    <div class="cap-tile">
+      <h3>Expanded context, complete answers</h3>
+      <p>The answering worker runs at a 128k context on a 16 GB card. At 32k a 74-item answer ran out of room; at 128k it finishes on its own, and every session ID it cites is real.</p>
+    </div>
+    <div class="cap-tile">
+      <h3>Private by routing, not by promise</h3>
+      <p>Sensitive history routes to a local-only worker that never falls back to a cloud model. Embeddings, telemetry and logs stay on your own machines. Digests carry IDs and titles, not transcripts.</p>
+    </div>
+  </div>
+  <div class="next">
+    <h3>What’s next</h3>
+    <ul>
+      <li><strong>Weekly recall extract:</strong> the local model pulls the top lessons from the week’s sessions, a human reviews them, and they land in agent memory (hippo / PMB).</li>
+      <li><strong>Planned vs. tested:</strong> digests of what was discussed in sessions but never smoke-tested, refreshed weekly, so the backlog answers for itself.</li>
+      <li><strong>Documents and mail, locally:</strong> exports of mail and document folders go through OCR and into the same search, without passing through a cloud model.</li>
+      <li><strong>Audio into text:</strong> local transcription of recordings, so spoken history becomes searchable next to the written kind.</li>
+      <li><strong>Browser/shell search fix:</strong> Hister’s corpus sync and index path, so the second tool answers as well as the first.</li>
+    </ul>
+  </div>
+  <div class="feature-cta">
+    <a class="btn primary" href="https://github.com/the1truedan/ai-gateway/blob/main/docs/HISTORY_ANALYST.md">Set it up</a>
+    <a class="btn" href="https://github.com/the1truedan/ai-gateway/releases/tag/v0.3.0">Release notes</a>
+  </div>
+</section>
 </div>
 
 <section class="band">
@@ -218,7 +279,7 @@
     <a class="stack-card" href="https://github.com/the1truedan/ai-gateway/tree/main/deploy/agentsview" target="_blank" rel="noopener">
       <span class="role">session index</span>
       <h3>AgentsView</h3>
-      <p>24/7 archive of CLI-agent sessions. IDs and titles only — never a bulk transcript reload. Own compose file, own Postgres, shared network.</p>
+      <p>24/7 archive of CLI-agent sessions, now with a read-only MCP sidecar the History Analyst queries directly. IDs and titles first — never a bulk transcript reload. Own compose file, own Postgres.</p>
       <span class="link-hint">deploy/agentsview →</span>
     </a>
     <a class="stack-card" href="https://github.com/open-webui/open-webui" target="_blank" rel="noopener">
@@ -266,6 +327,7 @@
     <p><strong>Headroom</strong> went in front because stateless chats and paywalls were eating sessions. <strong>LiteLLM</strong> became the bus because every client already spoke that dialect. <strong>OpenRouter</strong> kept a free-model catalog alive so recon could stay cheap. <strong>Grok</strong> was both a coworker under the 31 July deadline and the thread that hopped twitter.com → grok.com → WebUI → local history ingest → this gateway. <strong>Hippo</strong> and <strong>PMB</strong> landed next so the door had a memory: hippo for what an agent explicitly remembered, PMB for what the repo already knew.</p>
     <p><strong>AgentsView</strong> is the session index — IDs and titles across Claude Code, Codex, Grok Build, OpenCode — not a transcript dump. It runs as its own compose stack so a chat-stack outage does not take the archive with it.</p>
     <p>Then the weights outgrew every machine. The sibling <a href="https://the1truedan.github.io/fast-models/">fast-models</a> pool (NVMe, Btrfs, bees, NFS) is the house behind the doorbell. Public trees are sanitized: no home secrets, no care records, no raw LAN IPs.</p>
+    <p><span class="tl">22 September 2026</span> — the piece that had been missing: <strong>History Analyst</strong>. Months of sessions across every agent finally answer questions in one place, on local models, with the session IDs to prove it.</p>
     <p>Fluke or project management — either way the boxes light up.</p>
   </div>
 </section>
