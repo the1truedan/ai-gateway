@@ -1,19 +1,21 @@
 # ai-gateway
 
-[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.3.1-blue.svg)](CHANGELOG.md)
 [![Pages](https://img.shields.io/badge/pages-ai--gateway-6ee7ff.svg)](https://the1truedan.github.io/ai-gateway/)
 
-One front door for the models and tools in a home AI lab — chat UIs, coding
-agents, and scripts aim at the same local gateway instead of five different
-API bases and five different failure modes.
+One local gateway for the models and tools in a home AI lab. Chat apps, coding
+agents and scripts send requests to one address. The gateway sends each request
+to the correct local or cloud model.
 
-This repo is **glue and ops**, not a from-scratch model runtime. The value is
-wiring known open-source pieces so they behave as one stack.
+This repository contains **configuration and operations scripts**. It does not
+contain a model runtime. It connects known open-source components so that they
+operate as one system.
 
-**Current release:** [`v0.3.0` — History Analyst](https://github.com/the1truedan/ai-gateway/releases/tag/v0.3.0)
-(breakthrough). One Open WebUI preset answers questions across **every** past agent session
-(Claude Code, Codex, Grok, ChatGPT, shell and browser history) and cites the session IDs, on a
-local model with local bge-m3 embeddings and hybrid search. Setup:
+**Current release:** [`v0.3.1`](https://github.com/the1truedan/ai-gateway/releases/tag/v0.3.1): clearer wording (ASD-STE100) and the
+daily free-model catalog refreshes. **Feature release:** [`v0.3.0`, History Analyst](https://github.com/the1truedan/ai-gateway/releases/tag/v0.3.0).
+One Open WebUI preset answers questions about all past agent sessions (Claude Code, Codex, Grok,
+ChatGPT, shell and browser history). Each answer shows the session IDs that it used. It uses a local
+model, local bge-m3 embeddings and hybrid search. Setup:
 [docs/HISTORY_ANALYST.md](docs/HISTORY_ANALYST.md). Site:
 [the1truedan.github.io/ai-gateway](https://the1truedan.github.io/ai-gateway/).
 See [CHANGELOG.md](CHANGELOG.md) for dated detail.
@@ -95,7 +97,7 @@ Admin UI (`:4000/ui`) is for operators after login — **not** the public hero i
 
 Upstream: [BerriAI/litellm](https://github.com/BerriAI/litellm) (MIT).
 
-#### Headroom — thrifty front door (context shrink before spend)
+#### Headroom: the first stop for requests (makes context smaller before paid use)
 
 Default clients hit **Headroom** first. It sits **in front of** the orchestrator / LiteLLM path and compresses bulky agent context (tool dumps, logs, RAG, history) so fewer tokens hit the model.
 

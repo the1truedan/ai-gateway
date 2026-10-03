@@ -7,6 +7,14 @@ Commits before this file existed predate versioning and aren't individually
 back-filled here — `git log` is authoritative for that history. This starts
 the tracked record going forward.
 
+## [0.3.1] — 2026-10-02
+
+### Changed
+
+- README, site and repository description rewritten in ASD-STE100 style (Simplified Technical English):
+  short sentences, active voice, no idioms ("front door", "glue"), one term for one thing.
+- Includes the daily OpenRouter free-model catalog refreshes from 2026-09-23 to 2026-10-02.
+
 ## [0.3.0] — 2026-09-23
 
 ### Breakthrough: History Analyst

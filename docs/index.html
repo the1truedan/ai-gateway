@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>ai-gateway</title>
-<meta name="description" content="One front door for a home AI lab. Headroom in front, LiteLLM as the bus, OpenRouter and Grok in the mix. Glue, not a model runtime." />
+<meta name="description" content="One local gateway for a home AI lab. Headroom receives the requests. LiteLLM routes them to local and cloud models. Configuration only, no model runtime." />
 <link rel="icon" href="favicon.svg" type="image/svg+xml" />
 <style>
   :root {
@@ -167,14 +167,14 @@
 <div class="hero">
   <canvas id="gw-rain" aria-hidden="true"></canvas>
   <div class="hero-inner">
-    <p class="eyebrow">orchestration glue · not a model runtime</p>
+    <p class="eyebrow">configuration and operations · no model runtime</p>
     <h1 class="wordmark">ai<span>-</span>gateway</h1>
-    <p class="tagline">One front door for a home AI lab. Chat UIs and coding agents aim here instead of five API bases and five failure modes.</p>
+    <p class="tagline">One local address for the models in a home AI lab. Chat apps and coding agents use this one address, not five different API addresses.</p>
     <div class="hero-cta">
       <a class="btn primary" href="https://github.com/the1truedan/ai-gateway">View on GitHub</a>
       <a class="btn" href="https://github.com/the1truedan/ai-gateway/releases/tag/v0.3.0">v0.3.0 · History Analyst</a>
       <a class="btn" href="https://the1truedan.github.io/fast-models/">fast-models</a>
-      <span class="version-chip">v<b>0.3.0</b> · MIT · public</span>
+      <span class="version-chip">v<b>0.3.1</b> · MIT · public</span>
     </div>
   </div>
 </div>
@@ -233,7 +233,7 @@
     <a class="stack-card" href="https://github.com/chopratejas/headroom" target="_blank" rel="noopener">
       <span class="role">thrift</span>
       <h3>Headroom</h3>
-      <p>The default front door. Compresses context, watches spend, stays fail-open. Clients hit this so a long agent session does not dump a novel into a paid model by accident.</p>
+      <p>The first stop for requests. It makes long context smaller, records spend and passes requests through if it fails. A long agent session cannot send a very large context to a paid model by accident.</p>
       <span class="link-hint">github.com/chopratejas/headroom →</span>
     </a>
     <a class="stack-card" href="https://github.com/BerriAI/litellm" target="_blank" rel="noopener">
