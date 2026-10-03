@@ -365,7 +365,7 @@ LAN IPs stay off GitHub (roles like `gpu-host` / `nas-host` instead).
 
 | Path | What |
 |------|------|
-| [`docs/ops/bees/`](./docs/ops/bees/) | Hash sizing HOWTO, **4 G** considerations, 2026-08-01 incident, Grafana/cron shape, L1/L2/L3 ladder |
+| [`docs/ops/bees/`](./docs/ops/bees/) | Hash sizing HOWTO (**6G** in use, 75% full on 2.6 TiB; **8G** planned), 2026-08-01 incident, Grafana/cron shape, L1/L2/L3 ladder |
 | [`config/observability/ai-data-bees-dashboard.json`](./config/observability/ai-data-bees-dashboard.json) | Importable Grafana dashboard |
 | [`deploy/unraid-fast-models/`](./deploy/unraid-fast-models/) | Sketch of the Unraid pool stack |
 
