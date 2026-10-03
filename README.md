@@ -407,6 +407,8 @@ redistribute or run them.
 ---
 
 <p align="left">
+  <a href="https://the1truedan.github.io/ai-gateway/"><img src="https://img.shields.io/badge/pages-ai--gateway-e8b84a?style=for-the-badge" alt="GitHub Pages"></a>
+  <a href="https://github.com/the1truedan/ai-gateway/releases/tag/v0.3.1"><img src="https://img.shields.io/badge/release-v0.3.1-3dcaa0?style=for-the-badge" alt="v0.3.1"></a>
   <a href="https://linktr.ee/the1truedan"><img src="https://img.shields.io/badge/Linktree-39E09B?style=for-the-badge&logo=linktree&logoColor=white" alt="Linktree"></a>
   <a href="https://ko-fi.com/the1truedan"><img src="https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Ko-fi"></a>
 </p>
