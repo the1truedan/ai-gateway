@@ -59,7 +59,8 @@ model_list:
       api_base: http://host.docker.internal:8082/v1
       api_key: local
 
-  # Claude Code aliases → route to local models by default
+  # Claude Code aliases → route to LOCAL models by default (no Anthropic call).
+  # Current names (2026-10-03): haiku 4.5, sonnet 5.5, opus 5.5. The 4-6 / 4-7 names stay so older setups keep working.
   - model_name: claude-haiku-4-5-20251001
     litellm_params:
       model: ollama_chat/qwen3.5:9b
@@ -71,6 +72,16 @@ model_list:
       api_base: http://host.docker.internal:11434
 
   - model_name: claude-opus-4-7
+    litellm_params:
+      model: ollama_chat/gemma4:12b
+      api_base: http://host.docker.internal:11434
+
+  - model_name: claude-sonnet-5-5
+    litellm_params:
+      model: ollama_chat/qwen3.5:9b
+      api_base: http://host.docker.internal:11434
+
+  - model_name: claude-opus-5-5
     litellm_params:
       model: ollama_chat/gemma4:12b
       api_base: http://host.docker.internal:11434
@@ -225,7 +236,7 @@ model_list:
   # Real Anthropic via LiteLLM (not local claude-* aliases which map to Ollama).
   - model_name: manager-claude-paid
     litellm_params:
-      model: anthropic/claude-sonnet-5
+      model: anthropic/claude-sonnet-5-5
       api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: manager-claude-opus-paid
@@ -236,6 +247,12 @@ model_list:
   - model_name: manager-claude-haiku-paid
     litellm_params:
       model: anthropic/claude-haiku-4-5-20251001
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # Fable 5.1: Anthropic's most capable model (2026-10-03).
+  - model_name: manager-claude-fable-paid
+    litellm_params:
+      model: anthropic/claude-fable-5-1
       api_key: os.environ/ANTHROPIC_API_KEY
 
   - model_name: manager-mimo-cloud

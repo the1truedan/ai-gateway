@@ -244,7 +244,7 @@ Local capture index (ops only): [`docs/assets/stack-local/AI_GATEWAY_CAPTURES.md
 | **[Pi](https://github.com/badlogic/pi-mono)** | Terminal coding agent; models JSON → Headroom | [badlogic/pi-mono](https://github.com/badlogic/pi-mono) |
 | **[Oh My Pi (OMP)](https://github.com/acidsugarx/oh-my-pi)** | Pi-oriented harness / tooling (model lists under `config/clients/omp.*.yml`) | [acidsugarx/oh-my-pi](https://github.com/acidsugarx/oh-my-pi) |
 | **[OpenCode](https://github.com/anomalyco/opencode)** | Terminal coding agent; provider snippets → Headroom | [anomalyco/opencode](https://github.com/anomalyco/opencode) · [opencode.ai](https://opencode.ai) |
-| **Claude Code / Codex / Cursor / Grok Build** | Third-party CLIs/IDEs using the same `OPENAI_BASE_URL` → Headroom or LiteLLM | [Claude Code](https://claude.com/claude-code) · [Codex](https://github.com/openai/codex) · [Cursor](https://cursor.com) · [Grok Build](https://x.ai/news/grok-build-cli) |
+| **Claude Code / Codex / Cursor / Grok Build** | Third-party CLIs/IDEs pointed at the gateway: Codex, Cursor and Grok Build through `OPENAI_BASE_URL` → Headroom or LiteLLM; Claude Code through `ANTHROPIC_BASE_URL` → LiteLLM (see *Claude Code through the gateway*) | [Claude Code](https://claude.com/claude-code) · [Codex](https://github.com/openai/codex) · [Cursor](https://cursor.com) · [Grok Build](https://x.ai/news/grok-build-cli) |
 
 Lab launchers that sit *beside* those CLIs:
 
@@ -386,6 +386,18 @@ docker compose up -d
 
 You bring backends (Ollama, TurboQuant/llama-server, cloud keys). Nothing here
 is a turnkey clinical product.
+
+### Claude Code through the gateway
+
+`source ./setup-claude-code.sh` points Claude Code at LiteLLM (`ANTHROPIC_BASE_URL=http://localhost:4000`).
+
+| Mode | How | What answers |
+|------|-----|--------------|
+| **local** (default) | `source ./setup-claude-code.sh` | Claude Code sends Claude-style names (`claude-haiku-4-5-20251001`, `claude-sonnet-5-5`, `claude-opus-5-5`). `litellm_config.yaml` maps them to **local Ollama models** (`qwen3.5:9b`, `gemma4:12b`). No Anthropic call. |
+| **paid** | `CLAUDE_GATEWAY_MODE=paid source ./setup-claude-code.sh` | Real Anthropic models through `manager-claude-*-paid`: Haiku 4.5, Sonnet 5.5, Opus 5.5. Needs `ANTHROPIC_API_KEY`. |
+| **one model** | `claude --model manager-claude-fable-paid` | Fable 5.1, Anthropic's most capable model (as of October 2026). |
+
+The older alias names (`claude-sonnet-4-6`, `claude-opus-4-7`) still work, so existing setups do not break.
 
 ## Related public pieces (this org)
 
