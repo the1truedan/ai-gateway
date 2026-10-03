@@ -139,6 +139,8 @@ def merge(worker: dict, free: dict, *, include_paid: bool) -> dict:
             "drop_params": True,
             "telemetry": False,
             "store_prompts_in_spend_logs": False,
+            "success_callback": ["langfuse"],
+            "failure_callback": ["langfuse"],
         },
         "router_settings": worker.get("router_settings") or {"num_retries": 0, "fallbacks": []},
         "general_settings": worker.get("general_settings")
@@ -183,6 +185,8 @@ def _render_without_yaml(*, include_paid: bool) -> tuple[str, int]:
   drop_params: true
   telemetry: false
   store_prompts_in_spend_logs: false
+  success_callback: ["langfuse"]
+  failure_callback: ["langfuse"]
 router_settings: {num_retries: 0, fallbacks: []}
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY

@@ -27,6 +27,10 @@ services:
       - HF_TOKEN=${HF_TOKEN:-}
       - DARKBLOOM_API_KEY=${DARKBLOOM_API_KEY:-}
       - DATABASE_URL=postgresql://llmproxy:${LITELLM_DB_PASSWORD:-litellm_local_db}@litellm-db:5432/litellm
+      # Local Langfuse on this host :3300. Keys live in .env, not in this file.
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-http://192.168.1.5:3300}
     volumes:
       # Prefer merged worker+free+paid config (render_linux_litellm_config.py / push_gateway_nodes)
       - ./${LITELLM_CONFIG_FILE:-litellm_config.linux.yaml}:/app/config.yaml:ro

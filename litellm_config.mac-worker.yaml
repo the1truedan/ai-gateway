@@ -137,6 +137,8 @@ litellm_settings:
   num_retries: 1
   telemetry: false
   store_prompts_in_spend_logs: true
+  success_callback: ["langfuse"]
+  failure_callback: ["langfuse"]
   maximum_spend_logs_retention_period: "90d"
 
 general_settings:

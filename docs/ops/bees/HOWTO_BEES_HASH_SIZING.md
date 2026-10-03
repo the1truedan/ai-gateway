@@ -35,7 +35,7 @@ Rough guide for this fleet:
 |------------------------|----------|------------|------------------------------|
 | &lt; ~500 GiB | 16–32 GiB | 1G | 2G |
 | ~0.5–2 TiB | 32 GiB | **2G** | 4G only if needed |
-| &gt; 2 TiB | 32 GiB | 2G–4G | Prefer more RAM or split workloads before 8G |
+| &gt; 2 TiB | 32 GiB | 4G–6G | 8G as the pool grows (this lab: 6G at 2.6 TiB, 75% full) |
 
 **4G plan:** only if, after a **full re-crawl** on 2G, Grafana still shows
 occupancy ≳ **0.90–0.95**. Do not “pre-buy” 4G while also loading large local
