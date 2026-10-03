@@ -18,14 +18,14 @@ Btrfs. That phone book has a fixed size:
 The phone book size is **not** “how full the disk is.” A full hash table can
 happen while you still have terabytes free.
 
-## Current production defaults (NAS host, after 2026-08-01)
+## Current production defaults (NAS host, updated 2026-10-02)
 
 | Setting | Value | Notes |
 |---------|--------|--------|
-| `BEES_HASH_SIZE` | **4G** | 1G→2G morning (100% full); 2G→4G evening (99% full after re-crawl) on ~1.5 TiB used |
+| `BEES_HASH_SIZE` | **6G** | 1G→2G and 2G→4G on 2026-08-01 (~1.5 TiB used); 4G→6G on 2026-09-27. On 2026-10-02: 75% full on ~2.6 TiB used, evictions still occur. **8G planned** as the pool grows |
 | `BEES_THREADS` | **1** | Keep unless you have clear spare CPU/RAM |
 | `BEES_SCAN_MODE` | **4** | Extent scan (good for model blobs) |
-| Host RAM | ~31 GiB, **no swap** | Sticky hash RSS ≈ table size (~4 GiB at 4G) |
+| Host RAM | ~31 GiB, **no swap** | Sticky hash RSS ≈ table size (~6 GiB at 6G; ~8 GiB at 8G) |
 
 ## Choosing a size
 
