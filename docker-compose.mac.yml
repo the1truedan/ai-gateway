@@ -13,10 +13,6 @@ services:
       # would create Headroom -> orchestrator -> LiteLLM -> Headroom loops.
       - GPU_HOST_LITELLM_API_BASE=${GPU_HOST_LITELLM_API_BASE:-http://<gpu-host-ip>:4000/v1}
       - NAS_HOST_LITELLM_API_BASE=${NAS_HOST_LITELLM_API_BASE:-http://<nas-host-ip>:4000/v1}
-      # Local Langfuse on MRGPU. Keys live in .env, not in this file.
-      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
-      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
-      - LANGFUSE_HOST=${LANGFUSE_HOST:-http://192.168.1.5:3300}
     volumes:
       # Worker bus only (manager-worker-m4-*). Full hub catalog lives in
       # litellm_config.yaml for docs/other hosts; Mac control plane serves

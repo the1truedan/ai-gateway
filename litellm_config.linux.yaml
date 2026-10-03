@@ -107,8 +107,6 @@ litellm_settings:
   drop_params: true
   telemetry: false
   store_prompts_in_spend_logs: false
-  success_callback: ["langfuse"]
-  failure_callback: ["langfuse"]
 router_settings:
   num_retries: 0
   fallbacks:
