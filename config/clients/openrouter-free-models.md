@@ -1,6 +1,6 @@
 # OpenRouter free models (via AI-Gateway)
 
-_Auto-generated 2026-10-05T10:00:03.076662+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
+_Auto-generated 2026-10-06T10:00:03.385646+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
 
 Source: [openrouter.ai/models?max_price=0](https://openrouter.ai/models?max_price=0)
 
@@ -21,7 +21,7 @@ so Prometheus, retries, and fallbacks apply.
 
 ## Catalog
 
-**18** free chat-candidate models → **20** LiteLLM aliases (includes curated names).
+**17** free chat-candidate models → **19** LiteLLM aliases (includes curated names).
 
 | OpenRouter id | LiteLLM alias(es) | Ctx | Modality | Role |
 |---------------|-------------------|-----|----------|------|
@@ -33,7 +33,6 @@ so Prometheus, retries, and fallbacks apply.
 | `inclusionai/ling-3.1-flash` | `or-free-inclusionai-ling-3-1-flash` | 262k | text->text | General free chat |
 | `apodex/apodex-1.1-mini:free` | `or-free-apodex-apodex-1-1-mini-free` | 262k | text->text | General free chat |
 | `inclusionai/ling-3.0-flash-sante:free` | `or-free-inclusionai-ling-3-0-flash-sante-free` | 262k | text->text | General free chat |
-| `qwen/qwen3.8-27b:free` | `or-free-qwen-qwen3-8-27b-free` | 262k | text+image+video->text | General free chat |
 | `poolside/laguna-s-2.1:free` | `or-free-poolside-laguna-s-2-1-free` | 262k | text->text | Free coding agent (larger Laguna) |
 | `poolside/laguna-xs-2.1:free` | `manager-audit-claude`, `or-free-poolside-laguna-xs-2-1-free` | 262k | text->text | Lighter coding agent (curated audit) |
 | `google/gemma-4-26b-a4b-it:free` | `or-free-google-gemma-4-26b-a4b-it-free` | 262k | text+image+video->text | Free multimodal MoE VLM |
