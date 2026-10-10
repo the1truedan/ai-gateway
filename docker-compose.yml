@@ -292,7 +292,7 @@ services:
       - /tmp:noexec,nosuid,size=64m
     environment:
       - HISTER__SERVER__ADDRESS=0.0.0.0:4433
-      - HISTER__SERVER__BASE_URL=http://localhost:4433
+      - HISTER__SERVER__BASE_URL=${HISTER_BASE_URL:-http://localhost:4433}
       # LAN lock (2026-10-09): set HISTER_ACCESS_TOKEN in .env; clients send Authorization: Bearer / X-Access-Token
       - HISTER__APP__ACCESS_TOKEN=${HISTER_ACCESS_TOKEN:-}
       # Semantic search via LiteLLM manager-embed → MRGPU Ollama nomic (768d):
