@@ -1,6 +1,6 @@
 # OpenRouter free models (via AI-Gateway)
 
-_Auto-generated 2026-10-13T10:00:03.168070+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
+_Auto-generated 2026-10-14T10:00:03.413156+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
 
 Source: [openrouter.ai/models?max_price=0](https://openrouter.ai/models?max_price=0)
 
@@ -21,7 +21,7 @@ so Prometheus, retries, and fallbacks apply.
 
 ## Catalog
 
-**16** free chat-candidate models → **18** LiteLLM aliases (includes curated names).
+**14** free chat-candidate models → **16** LiteLLM aliases (includes curated names).
 
 | OpenRouter id | LiteLLM alias(es) | Ctx | Modality | Role |
 |---------------|-------------------|-----|----------|------|
@@ -30,8 +30,6 @@ so Prometheus, retries, and fallbacks apply.
 | `nvidia/nemotron-3.5-lightning:free` | `or-free-nvidia-nemotron-3-5-lightning-free` | 1M | text->text | 1M-ctx free reasoning / recon overflow |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | `or-free-nvidia-nemotron-3-ultra-550b-a55b-free` | 1M | text->text | Frontier reasoning / orchestration |
 | `dots-studio/dots-3-note-preview:free` | `or-free-dots-studio-dots-3-note-preview-free` | 512k | text+image->text | General free chat |
-| `inclusionai/ling-3.1-flash` | `or-free-inclusionai-ling-3-1-flash` | 262k | text->text | General free chat |
-| `apodex/apodex-1.1-mini:free` | `or-free-apodex-apodex-1-1-mini-free` | 262k | text->text | General free chat |
 | `poolside/laguna-s-2.1:free` | `or-free-poolside-laguna-s-2-1-free` | 262k | text->text | Free coding agent (larger Laguna) |
 | `poolside/laguna-xs-2.1:free` | `manager-audit-claude`, `or-free-poolside-laguna-xs-2-1-free` | 262k | text->text | Lighter coding agent (curated audit) |
 | `google/gemma-4-26b-a4b-it:free` | `or-free-google-gemma-4-26b-a4b-it-free` | 262k | text+image+video->text | Free multimodal MoE VLM |
