@@ -1,6 +1,6 @@
 # OpenRouter free models (via AI-Gateway)
 
-_Auto-generated 2026-10-22T10:00:03.755424+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
+_Auto-generated 2026-10-23T10:00:05.078890+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
 
 Source: [openrouter.ai/models?max_price=0](https://openrouter.ai/models?max_price=0)
 
@@ -21,13 +21,12 @@ so Prometheus, retries, and fallbacks apply.
 
 ## Catalog
 
-**18** free chat-candidate models → **20** LiteLLM aliases (includes curated names).
+**17** free chat-candidate models → **19** LiteLLM aliases (includes curated names).
 
 | OpenRouter id | LiteLLM alias(es) | Ctx | Modality | Role |
 |---------------|-------------------|-----|----------|------|
 | `thinkingmachines/inkling-small:free` | `or-free-thinkingmachines-inkling-small-free` | 1.0M | text+image+audio->text | 1M-ctx smaller Inkling (public_code only) |
 | `thinkingmachines/inkling:free` | `or-free-thinkingmachines-inkling-free` | 1.0M | text+image+audio->text | 1M-ctx multimodal (public_code only) |
-| `minimax/minimax-m3.1-flash:free` | `or-free-minimax-minimax-m3-1-flash-free` | 1M | text+image+video->text | General free chat |
 | `nvidia/nemotron-3.5-super-vl:free` | `or-free-nvidia-nemotron-3-5-super-vl-free` | 1M | text+image+video->text | Multimodal / vision free model |
 | `nvidia/nemotron-3.5-lightning:free` | `or-free-nvidia-nemotron-3-5-lightning-free` | 1M | text->text | 1M-ctx free reasoning / recon overflow |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | `or-free-nvidia-nemotron-3-ultra-550b-a55b-free` | 1M | text->text | Frontier reasoning / orchestration |
