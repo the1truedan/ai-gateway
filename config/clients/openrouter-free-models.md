@@ -1,6 +1,6 @@
 # OpenRouter free models (via AI-Gateway)
 
-_Auto-generated 2026-10-26T10:00:03.360440+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
+_Auto-generated 2026-10-27T10:00:02.407280+00:00 by `scripts/sync_openrouter_free_models.py`. Do not edit the catalog table by hand — re-run the sync._
 
 Source: [openrouter.ai/models?max_price=0](https://openrouter.ai/models?max_price=0)
 
@@ -21,7 +21,7 @@ so Prometheus, retries, and fallbacks apply.
 
 ## Catalog
 
-**17** free chat-candidate models → **19** LiteLLM aliases (includes curated names).
+**16** free chat-candidate models → **18** LiteLLM aliases (includes curated names).
 
 | OpenRouter id | LiteLLM alias(es) | Ctx | Modality | Role |
 |---------------|-------------------|-----|----------|------|
@@ -37,7 +37,6 @@ so Prometheus, retries, and fallbacks apply.
 | `poolside/laguna-xs-2.1:free` | `manager-audit-claude`, `or-free-poolside-laguna-xs-2-1-free` | 262k | text->text | Lighter coding agent (curated audit) |
 | `google/gemma-4-26b-a4b-it:free` | `or-free-google-gemma-4-26b-a4b-it-free` | 262k | text+image+video->text | Free multimodal MoE VLM |
 | `google/gemma-4-31b-it:free` | `or-free-google-gemma-4-31b-it-free` | 262k | text+image+video->text | Free multimodal VLM (image/video→text) |
-| `nvidia/nemotron-3-super-120b-a12b:free` | `or-free-nvidia-nemotron-3-super-120b-a12b-free` | 262k | text->text | Strong general MoE, efficient active params |
 | `cohere/north-mini-code:free` | `or-free-cohere-north-mini-code-free` | 256k | text->text | Agentic coding (North family) |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | `or-free-nvidia-nemotron-3-nano-omni-30b-a3b-reasoning-free` | 256k | text+image+audio+video->text | Multimodal perception / sub-agent |
 | `openrouter/free` | `manager-openrouter-free`, `or-free-openrouter-free` | 200k | text+image->text | Router: random free model (unpredictable) |
